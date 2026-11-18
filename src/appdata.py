@@ -34,8 +34,14 @@ class AppData(Store):
         row = self._one("SELECT trail FROM trails WHERE domain=?", (domain,))
         return _load(row["trail"]) if row else None
 
-    def list_trails(self) -> list[dict]:
-        return [_load(r["trail"]) for r in self._x("SELECT trail FROM trails").fetchall()]
+    def list_trails(self, slim: bool = False) -> list[dict]:
+        """All decision trails. slim=True leaves out the bulky research history (facts, actions, planner
+        notes), which list screens don't need; on Postgres that's dropped in the query itself."""
+        if slim and self.pg:
+            q = "SELECT trail - 'facts' - 'dropped_facts' - 'research' - 'planner_decisions' AS trail FROM trails"
+        else:
+            q = "SELECT trail FROM trails"
+        return [_load(r["trail"]) for r in self._x(q).fetchall()]
 
     # --- reply agent ------------------------------------------------------------------
     def get_thread(self, domain: str) -> dict | None:

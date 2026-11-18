@@ -103,7 +103,7 @@ GATE_LABELS = {"G1": "B2B software", "G5": "No SOC 2 / ISO yet", "G3": "100–1,
 
 def overview_data(db: AppData) -> dict:
     """Numbers for the Overview screen: funnel, rejection reasons, attention items."""
-    trails = db.list_trails()
+    trails = db.list_trails(slim=True)
     threads = db.list_threads()
     by_status: dict[str, int] = {}
     rejected_by: dict[str, int] = {}
@@ -361,7 +361,7 @@ class Handler(BaseHTTPRequestHandler):
             if u.path == "/api/agent/meta":
                 return self._json(200, agent_meta())
             if u.path == "/api/accounts":
-                return self._json(200, {"accounts": sort_accounts([account_summary(t) for t in data().list_trails()])})
+                return self._json(200, {"accounts": sort_accounts([account_summary(t) for t in data().list_trails(slim=True)])})
             if u.path == "/api/agent/threads":
                 db = data()
                 rows = []
