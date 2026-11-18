@@ -50,6 +50,8 @@ class AgentState(TypedDict, total=False):
     escalation_reason: str
     thread_status: str         # active | done | escalated | aborted
     lessons_used: list[int]    # L5: approved lessons the outreach draft was written with
+    escalated_notified: bool   # the escalation email has gone out
+    crm_attempted: bool        # update_crm already ran (so a CRM failure escalates once, without looping)
     route: str                 # where the router sends the graph next (internal)
     log: list[dict]            # events written this tick (the runner persists them)
 
@@ -212,7 +214,9 @@ def build_graph(tb: Toolbox, no_reply_hours: float = NO_REPLY_HOURS):
         sink: list = []
         run_tool("send_email", lambda: tb.send(f"[Escalation] {s.get('company')}: {s.get('escalation_reason')}",
                                                body, None, None), tool_logger(s, "escalate", sink))
-        return {"thread_status": "escalated", "route": "update_crm", "log": [*(s.get("log") or []), *sink]}
+        nxt = "end" if s.get("crm_attempted") else "update_crm"     # never loop back into a failed CRM call
+        return {"thread_status": "escalated", "escalated_notified": True, "route": nxt,
+                "log": [*(s.get("log") or []), *sink]}
 
     def update_crm(s: AgentState):
         if s.get("crm_logged"):
@@ -227,10 +231,12 @@ def build_graph(tb: Toolbox, no_reply_hours: float = NO_REPLY_HOURS):
         res = run_tool("update_crm", lambda: tb.crm(s["domain"], line, stage), tool_logger(s, "update_crm", sink))
         log = [*(s.get("log") or []), *sink]
         if not res.ok:
-            # The retry table says a human logs it: the thread is escalated with the reason, and stops.
-            return {"crm_logged": False, "thread_status": "escalated",
-                    "escalation_reason": (s.get("escalation_reason") or "") + f" | CRM not updated: {res.error}",
-                    "route": "end", "log": log}
+            # The retry table says a human logs it: email the Growth Lead (escalate), then stop.
+            base = s.get("escalation_reason") or ""
+            return {"crm_logged": False, "crm_attempted": True, "thread_status": "escalated",
+                    "escalation_reason": (base + " | " if base else "") + f"CRM not updated ({res.error}); log it by hand: {line}",
+                    "route": "end" if s.get("thread_status") == "escalated" and s.get("escalated_notified") else "escalate",
+                    "log": log}
         return {"crm_logged": True, "thread_status": status, "route": "end", "log": log}
 
     # ------------------------------------------------------------------ wiring

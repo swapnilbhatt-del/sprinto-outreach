@@ -132,6 +132,14 @@ def test_retry_table_calendar_timeouts_escalate_and_crm_down_is_handed_to_a_huma
     f2.reply("no")
     s2 = run(f2, fresh())
     assert s2["thread_status"] == "escalated" and not s2["crm_logged"] and "CRM not updated" in s2["escalation_reason"]
+    assert [m["subject"] for m in f2.sent if m["subject"].startswith("[Escalation]")]      # the human is told
+    f3 = Fake(script={"yes": {"intent": "confirm", "slot_index": 0, "proposed_time": "", "reason": ""}},
+              crm_error=PermanentToolError("HUBSPOT_TOKEN is not set"))
+    f3.reply("yes")
+    s3 = run(f3, {**fresh(), "times_proposed": ["2026-11-23T15:00:00+05:30"]})
+    esc = [m for m in f3.sent if m["subject"].startswith("[Escalation]")]
+    assert s3["meeting_status"] == "confirmed" and f3.booked and len(esc) == 1          # booked, told once, no loop
+    assert "log it by hand: Meeting booked" in esc[0]["body"]
 
 
 def test_run_tool_follows_the_table():
