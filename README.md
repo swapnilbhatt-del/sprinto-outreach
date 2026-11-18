@@ -8,6 +8,13 @@ This pipeline takes a list of prospect domains and works through each one. For e
 
 Every step leaves a decision trail in `outputs/runs/<domain>.json`.
 
+**Prospect Desk** (`src/webapp.py`) puts this in a local web app: type the company you sell for,
+find target accounts in funding news or paste your own, and see each account's decision, the people
+to contact, their verified emails and a drafted email. See [Prospect Desk](#prospect-desk-web-app) below.
+
+Results of the November 2026 runs (28 companies, 3 qualified) are summarised in the
+[run report](https://claude.ai/artifact/MPaEzXSJB5gdMw837eJZDJ).
+
 ## Setup
 
 ```bash

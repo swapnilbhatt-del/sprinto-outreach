@@ -113,7 +113,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
       <div><span class="k">2 · Accounts</span><p>Find recent Series A–C raises in free funding news (each with its quoted headline and source), or paste domains. Research runs the full check.</p></div>
       <div><span class="k">3 · People</span><p>For each qualified account: who to contact, title, verified email, why that person, and the drafted email with a copy button and “Send to my inbox”.</p></div>
     </div>
-    <p class="foot">It runs on the owner's Mac at 127.0.0.1:8765, so API keys and contact emails never leave that computer. This report is the shareable summary.</p>
+    <p class="foot">It runs on the owner's Mac at 127.0.0.1:8765, so API keys and contact emails never leave that computer. This report is the shareable summary. Code: <a href="https://github.com/swapnilbhatt-del/sprinto-outreach" target="_blank" rel="noopener">github.com/swapnilbhatt-del/sprinto-outreach</a></p>
   </section>
 
   <section>
@@ -174,8 +174,9 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
 
   <section>
     <span class="eyebrow">Verify it yourself</span>
-    <h2>Four checks, five minutes</h2>
+    <h2>Five checks, ten minutes</h2>
     <ol class="steps">
+      <li><div><strong>Get the code</strong><span class="foot">Then follow the README: add your own keys to <code>.env</code> and install the requirements.</span><pre>git clone https://github.com/swapnilbhatt-del/sprinto-outreach.git</pre></div></li>
       <li><div><strong>Open Prospect Desk</strong><span class="foot">From the project folder, then open http://127.0.0.1:8765 and type “Sprinto”.</span><pre>.venv/bin/python -m src.webapp</pre></div></li>
       <li><div><strong>Run the tests</strong><span class="foot">Expect “86 passed”.</span><pre>.venv/bin/python -m pytest -q</pre></div></li>
       <li><div><strong>Check the inbox</strong><span class="foot">Search Gmail for <code>Sprinto draft</code>: drafts with their internal notes.</span></div></li>
