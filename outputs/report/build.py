@@ -88,6 +88,11 @@ def main():
             .replace("{{ROWS}}", "\n".join(trs)).replace("{{DRAFTS}}", "".join(drafts))
             .replace("{{N}}", str(len(rows))).replace("{{GO}}", str(counts["go"]))
             .replace("{{REV}}", str(counts["needs_review"] + counts["retry"])).replace("{{NOGO}}", str(counts["no_go"])))
+    import base64
+    for name in ("overview", "agent", "learning"):          # screenshots, embedded so the page is self-contained
+        img = os.path.join(HERE, "img", f"{name}.jpg")
+        if os.path.exists(img):
+            page = page.replace("{{IMG:%s}}" % name, "data:image/jpeg;base64," + base64.b64encode(open(img, "rb").read()).decode())
     leaked = set(EMAIL.findall(page))
     if leaked:
         raise SystemExit(f"refusing to write: page contains email addresses {sorted(leaked)}")

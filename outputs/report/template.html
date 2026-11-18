@@ -49,10 +49,17 @@ header.top{display:flex;flex-direction:column;gap:16px}
 .after{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
 .after div{border-left:3px solid var(--rule);padding:2px 0 2px 12px;font-size:.93rem;color:var(--muted)}
 .after strong{color:var(--ink);display:block}
-.app{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
-.app div{display:flex;flex-direction:column;gap:4px;min-width:0}
-.app .k{font:600 .78rem var(--mono);color:var(--accent)}
-.app p{color:var(--muted);font-size:.93rem}
+.app{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.app a{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0;text-decoration:none;color:var(--ink)}
+.app a:hover{border-color:var(--accent)}
+.shot{margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.shot a{display:block;border:1px solid var(--rule);border-radius:10px;overflow:hidden;background:var(--sheet)}
+.shot img{display:block;width:100%;height:auto;max-width:100%}
+.shot figcaption{font-size:.9rem;color:var(--muted)}
+.shot figcaption b{color:var(--ink)}
+.shots2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.app .k{font:600 .8rem var(--mono);color:var(--accent)}
+.app p{color:var(--muted);font-size:.92rem}
 .ledger{overflow-x:auto;background:var(--sheet);border:1px solid var(--rule);border-radius:8px}
 table{border-collapse:collapse;width:100%;min-width:860px;font-size:.92rem}
 th{font:500 .72rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--rule);background:var(--paper)}
@@ -102,7 +109,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
 
 <div class="wrap">
   <header class="top">
-    <span class="eyebrow">Run report · 18 Nov 2026</span>
+    <span class="eyebrow">Run report · 18 Nov 2026 · redesigned app</span>
     <h1>Sprinto Outreach Pipeline</h1>
     <p class="lede">An agent that finds and researches B2B software companies, decides whether each fits Sprinto's ideal customer profile, finds the right person and a verified email, drafts a cited cold email, then handles the replies: proposing times, booking the meeting and learning from every outcome. Everything is sent only to the owner's own inbox.</p>
     <p><a class="live" href="https://sprinto-outreach-mauve.vercel.app" target="_blank" rel="noopener">Open the live app → sprinto-outreach-mauve.vercel.app</a></p>
@@ -116,13 +123,20 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
 
   <section>
     <span class="eyebrow">The app</span>
-    <h2>Prospect Desk: live, open to anyone with the link</h2>
+    <h2>Prospect Desk: a workspace that shows its working</h2>
+    <p class="intro">Five screens. Each shows the result and how the system reached it, with the lecture it comes from marked where it happens. Every link below opens that screen directly.</p>
+    <figure class="shot"><a href="https://sprinto-outreach-mauve.vercel.app/#overview" target="_blank" rel="noopener"><img src="{{IMG:overview}}" alt="Overview screen: headline, pipeline funnel from 28 researched to 1 meeting booked, rejection reasons by gate, and items needing attention"></a>
+      <figcaption><b>Overview.</b> What the tool does, the live funnel, why companies were rejected, what needs attention, and a map tying each step to the case, L4, L5 and L6.</figcaption></figure>
     <div class="app">
-      <div><span class="k">1 · Seller</span><p>Type “Sprinto”. The page loads its ideal-customer profile and the gates. Other sellers show “not set up yet”.</p></div>
-      <div><span class="k">2 · Accounts</span><p>Find recent Series A–C raises in free funding news (each with its quoted headline and source), or paste domains. Research runs the full check.</p></div>
-      <div><span class="k">3 · People</span><p>For each qualified account: who to contact, title, verified email, why that person, and the drafted email with a copy button.</p></div>
-      <div><span class="k">4 · Reply agent</span><p>“Send and start reply agent” mails the draft to the owner, who replies as the prospect. The agent reads the reply, checks the calendar, proposes times, books and logs, or escalates.</p></div>
-      <div><span class="k">5 · Feedback loop</span><p>Rate or edit any draft. “Learn from feedback” turns ratings, edits and reply outcomes into lessons; approved lessons shape the next drafts.</p></div>
+      <a href="https://sprinto-outreach-mauve.vercel.app/#accounts" target="_blank" rel="noopener"><span class="k">Accounts</span><p>Every company in one table: status, score, five gate marks, contact and email at a glance. Filter and search.</p></a>
+      <a href="https://sprinto-outreach-mauve.vercel.app/#account/wealthy.in" target="_blank" rel="noopener"><span class="k">Account detail · L4</span><p>Each gate with its quoted source, why this person, the email with its hook and two pain points, the conversation, feedback, and the research loop against its caps.</p></a>
+      <a href="https://sprinto-outreach-mauve.vercel.app/#find" target="_blank" rel="noopener"><span class="k">Find accounts</span><p>Series A–C raises from free funding news, each with its quoted headline, or pasted domains; research runs one company at a time.</p></a>
+    </div>
+    <div class="shots2">
+      <figure class="shot"><a href="https://sprinto-outreach-mauve.vercel.app/#agent" target="_blank" rel="noopener"><img src="{{IMG:agent}}" alt="Reply agent screen: the Wealthy thread with its six state fields in plain English and their technical names"></a>
+        <figcaption><b>Reply agent · L6.</b> The state object in plain English, a step-by-step timeline, the five tool descriptions and the retry rules.</figcaption></figure>
+      <figure class="shot"><a href="https://sprinto-outreach-mauve.vercel.app/#learning" target="_blank" rel="noopener"><img src="{{IMG:learning}}" alt="Learning screen: the four-step loop, lessons waiting for approval, and the feedback signals collected so far"></a>
+        <figcaption><b>Learning · L5.</b> The four-step loop, lessons waiting for approval, and every feedback signal it has collected.</figcaption></figure>
     </div>
     <p class="foot">Hosted on Vercel with a Supabase (Postgres) database. No sign-in: anyone with the link can view and run it, and every email it sends still goes only to the owner's inbox. A scheduler checks for replies every 15 minutes. Code: <a href="https://github.com/swapnilbhatt-del/sprinto-outreach" target="_blank" rel="noopener">github.com/swapnilbhatt-del/sprinto-outreach</a></p>
   </section>
@@ -223,7 +237,7 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
     <span class="eyebrow">Verify it yourself</span>
     <h2>Four checks, ten minutes</h2>
     <ol class="steps">
-      <li><div><strong>Open the live app</strong><span class="foot">No sign-in. Type “Sprinto”, open a Go account, look at the Reply agent and Feedback loop sections.</span><pre>https://sprinto-outreach-mauve.vercel.app</pre></div></li>
+      <li><div><strong>Open the live app</strong><span class="foot">No sign-in. Start on Overview, open a qualified account, then the Reply agent and Learning screens.</span><pre>https://sprinto-outreach-mauve.vercel.app</pre></div></li>
       <li><div><strong>Get the code</strong><span class="foot">Then follow the README: add your own keys to <code>.env</code> and install the requirements.</span><pre>git clone https://github.com/swapnilbhatt-del/sprinto-outreach.git</pre></div></li>
 
       <li><div><strong>Run the tests</strong><span class="foot">Expect “101 passed”.</span><pre>.venv/bin/python -m pytest -q</pre></div></li>
