@@ -56,6 +56,25 @@ Replace `data/hubspot_customers.csv` with your real HubSpot company export. The 
 
 The domains file has one domain per line, optionally followed by the company name: `hevodata.com, Hevo Data`. Give a name when the brand differs from the domain. Without one, the name comes from Clearbit (only on an exact domain match) or the domain itself.
 
+## Live deployment
+
+**https://sprinto-outreach-mauve.vercel.app** (Vercel + Supabase). Sign in with `APP_PASSWORD`
+(`grep APP_PASSWORD .env` on the owner's Mac). Same app as below, plus:
+
+- **Reply agent (L6, `src/agent/`):** LangGraph state machine with five tools (`send_email`,
+  `check_calendar`, `propose_time`, `book_meeting`, `update_crm`), the six-field state object, a
+  retry/abort table per tool, and escalation to the Growth Lead at counter-proposal round 2, after 48 h
+  of silence, or on an unclear reply. State is saved per thread in Supabase between checks. A GitHub
+  Actions job checks replies every 15 minutes (`.github/workflows/reply-agent.yml`).
+- **Feedback loop (L5, `src/feedback.py`):** ratings, edits and reply outcomes become lesson
+  candidates with cited evidence; only approved lessons reach the drafting prompt, and every draft
+  records the lessons it used.
+- Every email still goes only to OWN_EMAIL. To test the agent, reply to the draft in your own inbox as
+  the prospect (or `scripts/simulate_reply.py`).
+
+Setup from scratch: `db/schema_pg.sql` on Supabase, `scripts/set_db_url.py`, `python -m src.google_setup`,
+`bash scripts/push_env.sh`, `vercel deploy --prod`, `python -m src.migrate_to_db`.
+
 ## Prospect Desk (web app)
 
 ```bash
