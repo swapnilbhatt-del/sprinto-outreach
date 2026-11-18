@@ -64,7 +64,7 @@ def _people(t: dict) -> list[dict]:
         seen.add(e)
         out.append({"name": r.get("name"), "title": r.get("position"), "email": r.get("email"), "role": "other",
                     "verification": r.get("verification"), "why": r.get("rejected") or "ranked title"})
-    def same_person(a: str, b: str) -> bool:      # "Abhay Gupta" == "Abhay Jeet Gupta"
+    def same_person(a: str, b: str) -> bool:      # "Ana Rao" == "Ana Maria Rao"
         x, y = (a or "").lower().split(), (b or "").lower().split()
         return bool(x and y) and x[0] == y[0] and x[-1] == y[-1]
 
