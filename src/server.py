@@ -105,7 +105,15 @@ def make_session(ts: int | None = None) -> str:
     return f"{ts}.{sig}"
 
 
+def open_access() -> bool:
+    """OPEN_ACCESS=1 turns the password off: anyone with the link can use the app (owner's choice,
+    2026-11-18). Sending still only ever reaches OWN_EMAIL. Remove the variable to require the password again."""
+    return os.environ.get("OPEN_ACCESS") == "1"
+
+
 def session_ok(cookie: str | None) -> bool:
+    if open_access():
+        return True
     if not os.environ.get("APP_PASSWORD"):
         # Local use may skip the password; a deployment never runs open.
         return not os.environ.get("VERCEL")
@@ -243,7 +251,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.write(body)
                 return
             if u.path == "/api/me":
-                return self._json(200, {"authed": self._authed(), "password_required": bool(os.environ.get("APP_PASSWORD"))})
+                return self._json(200, {"authed": self._authed(),
+                                       "password_required": bool(os.environ.get("APP_PASSWORD")) and not open_access()})
             if not self._authed():
                 return self._json(401, {"error": "Sign in first."})
             if u.path == "/api/seller":

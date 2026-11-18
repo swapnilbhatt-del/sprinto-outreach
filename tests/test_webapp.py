@@ -145,3 +145,18 @@ def test_vercel_rewrite_path_is_restored():
     assert original_url("/api/index?__path=/api/seller&name=Sprinto").query == "name=Sprinto"
     assert original_url("/api/index?__path=/").path == "/"
     assert original_url("/api/me").path == "/api/me"                     # local server: unchanged
+
+
+def test_open_access_skips_the_password_but_not_the_cron_secret(icp, monkeypatch, tmp_path):
+    from src.server import Handler
+    monkeypatch.setenv("APP_PASSWORD", "pw-123")
+    monkeypatch.setenv("OPEN_ACCESS", "1")
+    monkeypatch.setenv("CRON_SECRET", "cron-xyz")
+    import src.server as server
+    monkeypatch.setattr(server, "data", lambda: __import__("src.appdata", fromlist=["AppData"]).AppData(tmp_path / "o.sqlite"))
+    srv, port = _serve(Handler, icp)
+    try:
+        assert _req(port, "GET", "/api/me")[1] == {"authed": True, "password_required": False}
+        assert _req(port, "GET", "/api/accounts")[0] == 200
+    finally:
+        srv.shutdown()
