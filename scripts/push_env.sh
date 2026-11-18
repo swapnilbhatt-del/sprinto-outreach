@@ -16,9 +16,10 @@ cd "$(dirname "$0")/.."
 
 getv() { grep -E "^$1=" .env | tail -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//' ; }
 
-for k in CRON_SECRET APP_SECRET; do
+for k in CRON_SECRET APP_SECRET APP_PASSWORD; do
   if [ -z "$(getv "$k")" ]; then
-    printf '\n%s=%s\n' "$k" "$(openssl rand -hex 24)" >> .env
+    if [ "$k" = APP_PASSWORD ]; then v="$(openssl rand -base64 12 | tr -d '/+=')"; else v="$(openssl rand -hex 24)"; fi
+    printf '\n%s=%s\n' "$k" "$v" >> .env
     echo "generated $k (saved to .env)"
   fi
 done
@@ -32,7 +33,7 @@ push() {  # name value
 }
 
 missing=0
-for k in GEMINI_API_KEY HUNTER_API_KEY OWN_EMAIL DATABASE_URL APP_PASSWORD; do
+for k in GEMINI_API_KEY HUNTER_API_KEY OWN_EMAIL DATABASE_URL; do
   [ -n "$(getv "$k")" ] || { echo "MISSING $k in .env"; missing=1; }
 done
 [ -f db/google_token.json ] || { echo "MISSING db/google_token.json (run: .venv/bin/python -m src.google_setup)"; missing=1; }
