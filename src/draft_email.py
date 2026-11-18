@@ -72,7 +72,7 @@ def check_draft(d: dict, contact: dict, facts_by_id: dict, hooks_by_id: dict, ma
 
 
 def draft(llm: JsonLLM, budget: CallBudget, icp: dict, domain: str, contact: dict, facts: list[dict],
-          contact_reason: str) -> tuple[str, dict | None, str]:
+          contact_reason: str, lessons: list[dict] | None = None) -> tuple[str, dict | None, str]:
     """Returns (status, draft, reason). status: drafted | needs_review."""
     ecfg = icp["email"]
     hooks = hook_candidates(facts, ecfg["hook_fact_keys"])
@@ -90,6 +90,10 @@ def draft(llm: JsonLLM, budget: CallBudget, icp: dict, domain: str, contact: dic
             f"What Sprinto does:\n" + "\n".join(f"- {v}" for v in ecfg["sprinto_value_props"]) +
             f"\n\nVerified facts (the only facts you may use):\n{fact_lines}")
     system = SYSTEM.format(max_words=ecfg["max_words"])
+    if lessons:
+        # L5: approved lessons from past outcomes. They shape style and focus; the hard rules above still win.
+        system += ("\n\nLessons from past outcomes, approved by the Growth Lead (follow them unless they "
+                   "conflict with a hard rule above):\n" + "\n".join(f"- {l['text']}" for l in lessons))
     last_problems = []
     for attempt in range(2):
         if attempt:
@@ -104,6 +108,7 @@ def draft(llm: JsonLLM, budget: CallBudget, icp: dict, domain: str, contact: dic
         if not last_problems:
             hook = hooks_by_id[d["hook_fact_id"]]
             d["hook_url"] = hook["source_url"]
+            d["lessons_used"] = [l["id"] for l in lessons or []]
             d["hook_quote"] = hook["quote"]
             return "drafted", d, d.get("reasoning", "")
     return "needs_review", None, "draft failed checks twice: " + "; ".join(last_problems)

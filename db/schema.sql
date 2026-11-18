@@ -149,3 +149,10 @@ CREATE TABLE IF NOT EXISTS hunter_verify_cache (
     response_json TEXT NOT NULL,
     fetched_at    TEXT NOT NULL
 );
+
+-- App data (same tables as db/schema_pg.sql; JSON stored as text here).
+CREATE TABLE IF NOT EXISTS trails (domain TEXT PRIMARY KEY, trail TEXT NOT NULL, updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS agent_threads (domain TEXT PRIMARY KEY, state TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'active', updated_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS agent_events (id INTEGER PRIMARY KEY AUTOINCREMENT, domain TEXT NOT NULL, node TEXT NOT NULL, tool TEXT, outcome TEXT NOT NULL, detail TEXT, created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, domain TEXT NOT NULL, draft_version INTEGER NOT NULL DEFAULT 1, rating INTEGER, edited_body TEXT, notes TEXT, reply_status TEXT, lessons_used TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS lessons (id INTEGER PRIMARY KEY AUTOINCREMENT, text TEXT NOT NULL, rationale TEXT, evidence TEXT NOT NULL DEFAULT '[]', status TEXT NOT NULL DEFAULT 'pending', created_at TEXT NOT NULL, decided_at TEXT);

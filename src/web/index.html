@@ -6,7 +6,7 @@
 <title>Prospect Desk</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: a single working column of three steps; the account list is the main surface. */
+/* Layout: one working column of steps; accounts, agent threads and lessons are the main surfaces. */
 :root{
   --paper:#f4f5f7; --sheet:#fff; --ink:#17202b; --muted:#5b6676; --rule:#dce0e6; --hover:#eef1f6;
   --accent:#2b4fa8; --accent-ink:#fff; --accent-soft:#e7ecf8;
@@ -20,6 +20,7 @@
   --accent:#8fa9ef; --accent-ink:#0e1420; --accent-soft:#1f2a44;
   --go:#6fcf9a; --go-soft:#16301f; --rev:#e8b45a; --rev-soft:#33280f; --no:#ef8f8f; --no-soft:#3a1c1c; color-scheme:dark}}
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 var(--sans);
   padding:28px max(16px,env(safe-area-inset-right,0px)) 64px max(16px,env(safe-area-inset-left,0px))}
 .wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
@@ -27,35 +28,31 @@ h1,h2,h3{margin:0;line-height:1.2;text-wrap:balance}
 h1{font-size:1.6rem;font-weight:800;letter-spacing:-.01em}
 h2{font-size:1.15rem;font-weight:700}
 p{margin:0}
-.muted{color:var(--muted)}
-.mono{font-family:var(--mono)}
+.muted{color:var(--muted)} .mono{font-family:var(--mono)} .small{font-size:.85rem}
 .label{font:500 .72rem var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
-button,input,textarea{font:inherit;color:inherit}
+button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer;border-radius:7px;border:1px solid var(--rule);background:var(--sheet);padding:8px 14px;font-weight:600}
 button:hover{background:var(--hover)}
 button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 button.primary:hover{filter:brightness(1.07)}
 button:disabled{opacity:.5;cursor:default}
-button.small{padding:4px 9px;font-size:.82rem;font-weight:500}
+button.sm{padding:4px 9px;font-size:.82rem;font-weight:500}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-input[type=text],textarea{background:var(--sheet);border:1px solid var(--rule);border-radius:7px;padding:9px 12px;width:100%}
+input[type=text],input[type=password],textarea,select{background:var(--sheet);border:1px solid var(--rule);border-radius:7px;padding:9px 12px;width:100%}
 textarea{min-height:110px;font:.88rem/1.5 var(--mono);resize:vertical}
-
 header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
 .credits{font:.82rem var(--mono);color:var(--muted);background:var(--sheet);border:1px solid var(--rule);border-radius:999px;padding:5px 12px}
 .panel{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
-.step{display:flex;gap:10px;align-items:baseline}
+.step{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .step .n{font:600 .8rem var(--mono);color:var(--accent)}
-
-.seller-row{display:flex;gap:10px;flex-wrap:wrap}
-.seller-row input{flex:1 1 240px}
-.seller-card{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--rule);padding-top:14px}
-.gatechips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{font:.78rem var(--mono);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>input{flex:1 1 240px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:.76rem var(--mono);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;color:var(--muted)}
 .chip b{color:var(--ink);font-weight:500}
 .chip.score{border-style:dashed}
+.chip.on{border-color:var(--go);color:var(--go)}
 .err{color:var(--no);font-size:.92rem}
-
 .find{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}
 @media (max-width:760px){.find{grid-template-columns:1fr}}
 .find>div{display:flex;flex-direction:column;gap:10px;min-width:0}
@@ -64,39 +61,37 @@ header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-conte
 .cand:last-child{border-bottom:0}
 .cand .q{color:var(--muted);font-size:.82rem}
 .cand.off{opacity:.55}
-.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-
-.job{display:flex;flex-direction:column;gap:8px}
-.bar{height:6px;background:var(--hover);border-radius:4px;overflow:hidden}
-.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
 .joblist{display:flex;flex-direction:column;gap:4px;font-size:.88rem}
 .joblist div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar{height:6px;background:var(--hover);border-radius:4px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
 .spin{display:inline-block;width:10px;height:10px;border:2px solid var(--rule);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite}
 @keyframes s{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}.bar>i{transition:none}}
-
 .tabs{display:flex;gap:6px;flex-wrap:wrap}
 .tabs button{font-weight:500}
 .tabs button[aria-pressed=true]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.list{display:flex;flex-direction:column;gap:10px}
 .acct{border:1px solid var(--rule);border-radius:9px;background:var(--sheet);overflow:hidden}
 .acct>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1.4fr) auto auto minmax(0,2fr);gap:12px;align-items:center;padding:12px 14px}
 .acct>summary::-webkit-details-marker{display:none}
 .acct>summary:hover{background:var(--hover)}
 @media (max-width:760px){.acct>summary{grid-template-columns:1fr auto}.acct .reason{grid-column:1/-1}.acct .ppl{display:none}}
-.acct .nm strong{display:block}
-.acct .nm span{font:.78rem var(--mono);color:var(--muted)}
+.nm strong{display:block} .nm span{font:.78rem var(--mono);color:var(--muted)}
 .reason{color:var(--muted);font-size:.86rem;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .ppl{font:.8rem var(--mono);color:var(--muted);white-space:nowrap}
 .pill{display:inline-block;font:600 .72rem/1 var(--mono);padding:5px 8px;border-radius:999px;white-space:nowrap}
-.p-go{background:var(--go-soft);color:var(--go)} .p-needs_review{background:var(--rev-soft);color:var(--rev)}
-.p-no_go{background:var(--no-soft);color:var(--no)} .p-retry{background:var(--accent-soft);color:var(--accent)}
+.p-go,.p-done,.p-confirmed{background:var(--go-soft);color:var(--go)}
+.p-needs_review,.p-escalated{background:var(--rev-soft);color:var(--rev)}
+.p-no_go,.p-aborted{background:var(--no-soft);color:var(--no)}
+.p-retry,.p-active{background:var(--accent-soft);color:var(--accent)}
 .detail{border-top:1px solid var(--rule);padding:16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media (max-width:760px){.detail{grid-template-columns:1fr}}
 .detail section{display:flex;flex-direction:column;gap:8px;min-width:0}
 .detail .full{grid-column:1/-1}
 .gl{display:flex;flex-direction:column;gap:6px;font-size:.86rem}
 .gl div{display:grid;grid-template-columns:44px 20px 1fr;gap:6px}
-.gl .s-pass{color:var(--go)} .gl .s-fail{color:var(--no)} .gl .s-unknown{color:var(--rev)}
+.s-pass{color:var(--go)} .s-fail{color:var(--no)} .s-unknown{color:var(--rev)}
 .gl .r{color:var(--muted);overflow-wrap:anywhere}
 .tblwrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.88rem;min-width:520px}
@@ -107,29 +102,50 @@ td.em{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere}
 .warn{color:var(--rev);font-size:.82rem}
 .draft{border-left:3px solid var(--accent);padding-left:12px;white-space:pre-wrap;font-size:.92rem}
 .hook{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
-.empty{color:var(--muted);text-align:center;padding:28px 12px;border:1px dashed var(--rule);border-radius:9px}
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:8px;font-size:.9rem}
+.fb{display:grid;grid-template-columns:140px 1fr;gap:10px;align-items:start}
+@media (max-width:760px){.fb{grid-template-columns:1fr}}
+.state{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.state div{border:1px solid var(--rule);border-radius:7px;padding:8px 10px;min-width:0}
+.state b{display:block;font:500 .7rem var(--mono);color:var(--muted);letter-spacing:.04em}
+.state span{font:.88rem var(--mono);overflow-wrap:anywhere}
+.events{font:.8rem var(--mono);color:var(--muted);display:flex;flex-direction:column;gap:3px;max-height:220px;overflow:auto}
+.lesson{border:1px solid var(--rule);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.empty{color:var(--muted);text-align:center;padding:24px 12px;border:1px dashed var(--rule);border-radius:9px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:8px;font-size:.9rem;max-width:90vw}
+.login{max-width:380px;margin:12vh auto 0}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="login" hidden>
+  <section class="panel login">
+    <span class="label">Prospect Desk</span>
+    <h1>Sign in</h1>
+    <form class="row" id="loginForm">
+      <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
+      <button class="primary" type="submit">Sign in</button>
+    </form>
+    <p class="err" id="loginErr" hidden></p>
+  </section>
+</div>
+
+<div class="wrap" id="app" hidden>
   <header class="top">
-    <div><span class="label">Prospecting · runs on this Mac</span><h1>Prospect Desk</h1></div>
+    <div><span class="label">Prospecting · reply agent · feedback loop</span><h1>Prospect Desk</h1></div>
     <span class="credits" id="credits">Hunter credits: checking…</span>
   </header>
 
   <section class="panel" aria-labelledby="s1">
     <div class="step"><span class="n">1</span><h2 id="s1">Who are you selling for?</h2></div>
-    <form class="seller-row" id="sellerForm">
+    <form class="row" id="sellerForm">
       <input type="text" id="seller" placeholder="Company you represent, e.g. Sprinto" value="Sprinto" autocomplete="off">
       <button class="primary" type="submit">Load profile</button>
     </form>
     <p class="err" id="sellerErr" hidden></p>
-    <div class="seller-card" id="sellerCard" hidden>
+    <div id="sellerCard" hidden style="display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--rule);padding-top:14px">
       <p><strong id="sName"></strong> <span class="muted mono" id="sDomain"></span></p>
       <p class="muted" id="sPitch"></p>
-      <div><span class="label">Ideal customer: gates checked in order</span></div>
-      <div class="gatechips" id="sGates"></div>
+      <span class="label">Ideal customer: gates checked in order</span>
+      <div class="chips" id="sGates"></div>
     </div>
   </section>
 
@@ -137,8 +153,8 @@ td.em{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere}
     <div class="step"><span class="n">2</span><h2 id="s2">Choose target accounts</h2></div>
     <div class="find">
       <div>
-        <div class="actions"><button id="discoverBtn" type="button">Find companies in funding news</button>
-          <span class="muted" style="font-size:.85rem">Free search, about a minute</span></div>
+        <div class="row"><button id="discoverBtn" type="button">Find companies in funding news</button>
+          <span class="muted small">Free search, about a minute</span></div>
         <div class="cands" id="cands"><div class="empty">Companies that recently raised Series A–C will appear here.</div></div>
       </div>
       <div>
@@ -146,14 +162,13 @@ td.em{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere}
         <textarea id="paste" placeholder="acme.com, Acme&#10;example.io"></textarea>
       </div>
     </div>
-    <div class="actions">
+    <div class="row">
       <button class="primary" id="researchBtn" type="button" disabled>Research 0 accounts</button>
-      <span class="muted" style="font-size:.85rem">Each takes 2–4 minutes. Contacts use Hunter credits only for qualified accounts.</span>
+      <span class="muted small">One at a time, 1–4 minutes each. Hunter credits are spent only on qualified accounts.</span>
     </div>
-    <div class="job" id="job" hidden>
+    <div id="job" hidden style="display:flex;flex-direction:column;gap:8px">
       <div class="bar"><i id="jobBar"></i></div>
       <div class="joblist" id="jobList"></div>
-      <p class="muted mono" style="font-size:.8rem" id="jobLog"></p>
     </div>
   </section>
 
@@ -165,7 +180,21 @@ td.em{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere}
       <button type="button" data-f="no_go" aria-pressed="false">No-go</button>
       <button type="button" data-f="all" aria-pressed="false">All</button>
     </div>
-    <div id="accts" style="display:flex;flex-direction:column;gap:10px"></div>
+    <div class="list" id="accts"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s4" id="agentPanel" hidden>
+    <div class="step"><span class="n">4</span><h2 id="s4">Reply agent</h2>
+      <span class="muted small">Sends the draft to your inbox; reply to it as the prospect. Checks every 15 minutes, or now:</span>
+      <button class="sm" id="tickBtn" type="button">Check replies now</button></div>
+    <div class="list" id="threads"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="s5" id="lessonPanel" hidden>
+    <div class="step"><span class="n">5</span><h2 id="s5">Feedback loop</h2>
+      <span class="muted small">Ratings, your edits and reply outcomes become lessons. Only approved lessons shape new drafts.</span></div>
+    <div class="row"><button id="learnBtn" type="button">Learn from feedback</button><span class="muted small" id="fbCount"></span></div>
+    <div class="list" id="lessons"></div>
   </section>
 </div>
 <div class="toast" id="toast" hidden></div>
@@ -173,37 +202,45 @@ td.em{font-family:var(--mono);font-size:.82rem;overflow-wrap:anywhere}
 <script>
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const STATUS = {go:"Go", needs_review:"Needs review", no_go:"No-go", retry:"Retry", excluded:"Excluded"};
-let accounts = [], filter = "go", candidates = [], pollTimer = null;
+const STATUS = {go:"Go", needs_review:"Needs review", no_go:"No-go", retry:"Retry", excluded:"Excluded",
+                active:"Active", done:"Done", escalated:"Escalated", aborted:"Aborted"};
+let accounts = [], filter = "go", candidates = [], busy = false, threadsByDomain = {};
 
-function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true,2600); }
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true,3200); }
 async function api(path, opts={}){
-  const r = await fetch(path, {headers:{"Content-Type":"application/json"}, ...opts});
-  const j = await r.json().catch(()=>({error:"Bad response from the app."}));
+  const r = await fetch(path, {headers:{"Content-Type":"application/json"}, credentials:"same-origin", ...opts});
+  const j = await r.json().catch(()=>({error:`The server didn't answer properly (HTTP ${r.status}).`}));
+  if(r.status === 401 && path !== "/api/login"){ showLogin(); throw new Error("Sign in again."); }
   if(!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
   return j;
 }
-async function copy(text){
-  try{ await navigator.clipboard.writeText(text); toast("Copied"); }catch{ toast("Couldn't copy; select the text instead"); }
-}
+const post = (path, body={}) => api(path, {method:"POST", body: JSON.stringify(body)});
+async function copy(text){ try{ await navigator.clipboard.writeText(text); toast("Copied"); }catch{ toast("Couldn't copy; select the text instead"); } }
+
+// ---------- sign in
+function showLogin(){ $("#app").hidden = true; $("#login").hidden = false; $("#pw").focus(); }
+$("#loginForm").addEventListener("submit", async e => {
+  e.preventDefault(); $("#loginErr").hidden = true;
+  try{ await post("/api/login", {password: $("#pw").value}); $("#login").hidden = true; start(); }
+  catch(err){ $("#loginErr").textContent = err.message; $("#loginErr").hidden = false; }
+});
 
 // ---------- step 1
 $("#sellerForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  $("#sellerErr").hidden = true;
+  e.preventDefault(); $("#sellerErr").hidden = true;
   try{
     const s = await api(`/api/seller?name=${encodeURIComponent($("#seller").value)}`);
     $("#sName").textContent = s.name; $("#sDomain").textContent = s.domain; $("#sPitch").textContent = s.pitch;
     $("#sGates").innerHTML = s.gates.map(g => `<span class="chip ${g.scoring_only?"score":""}"><b>${esc(g.id)}</b> ${esc(g.name)}${g.scoring_only?" · +points":""}</span>`).join("");
-    if(s.hunter && s.hunter.remaining != null) $("#credits").textContent = `Hunter credits: ${s.hunter.remaining} left · resets ${s.hunter.reset}`;
-    else $("#credits").textContent = "Hunter credits: unavailable";
-    $("#sellerCard").hidden = false; $("#findPanel").hidden = false; $("#acctPanel").hidden = false;
-    loadAccounts();
+    $("#credits").textContent = s.hunter && s.hunter.remaining != null ? `Hunter credits: ${s.hunter.remaining} left · resets ${s.hunter.reset}` : "Hunter credits: unavailable";
+    for(const id of ["#sellerCard","#findPanel","#acctPanel","#agentPanel","#lessonPanel"]) $(id).hidden = false;
+    refreshAll();
   }catch(err){
     $("#sellerErr").textContent = err.message; $("#sellerErr").hidden = false;
-    $("#sellerCard").hidden = true; $("#findPanel").hidden = true; $("#acctPanel").hidden = true;
+    for(const id of ["#sellerCard","#findPanel","#acctPanel","#agentPanel","#lessonPanel"]) $(id).hidden = true;
   }
 });
+function refreshAll(){ loadAccounts(); loadThreads(); loadLessons(); }
 
 // ---------- step 2
 function targets(){
@@ -213,99 +250,88 @@ function targets(){
   });
   const seen = new Set(); return [...picked, ...pasted].filter(t => { const k=t.domain.toLowerCase(); if(seen.has(k)) return false; seen.add(k); return true; });
 }
-function refreshCount(){
-  const n = targets().length, b = $("#researchBtn");
-  b.textContent = `Research ${n} account${n===1?"":"s"}`; b.disabled = n === 0 || !!pollTimer;
-}
+function refreshCount(){ const n = targets().length, b = $("#researchBtn"); b.textContent = `Research ${n} account${n===1?"":"s"}`; b.disabled = n === 0 || busy; }
 $("#paste").addEventListener("input", refreshCount);
 
 function renderCands(){
   const box = $("#cands");
-  if(!candidates.length){ box.innerHTML = `<div class="empty">No B2B companies with a clear funding headline found this time. Try again later or paste domains.</div>`; return; }
-  const note = {new:"", check_domain:"Website is a guess: check it before researching", researched:"Already researched", excluded:"In HubSpot as a customer", no_domain:"Website not found"};
+  if(!candidates.length){ box.innerHTML = `<div class="empty">No B2B companies with a clear funding headline this time. Try later or paste domains.</div>`; return; }
+  const note = {new:"", check_domain:"Website is a guess: check it first", researched:"Already researched", excluded:"In HubSpot as a customer", no_domain:"Website not found"};
   box.innerHTML = candidates.map((c,i) => `
     <label class="cand ${c.status!=="new"?"off":""}">
       <input type="checkbox" data-i="${i}" ${c.checked?"checked":""} ${c.domain && c.status!=="excluded"?"":"disabled"}>
       <span><strong>${esc(c.name)}</strong> <span class="mono muted">${esc(c.domain||"")}</span>
-        ${c.round?`<span class="chip">${esc(c.round)}</span>`:""} ${note[c.status]?`<span class="muted" style="font-size:.8rem">· ${note[c.status]}</span>`:""}
+        ${c.round?`<span class="chip">${esc(c.round)}</span>`:""} ${note[c.status]?`<span class="muted small">· ${note[c.status]}</span>`:""}
         <span class="q" style="display:block">“${esc(c.quote)}” <a href="${esc(c.source_url)}" target="_blank" rel="noopener">source</a>${c.date?` · ${esc(c.date)}`:""}</span></span>
     </label>`).join("");
-  box.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", e => {
-    candidates[+e.target.dataset.i].checked = e.target.checked; refreshCount();
-  }));
+  box.querySelectorAll("input[type=checkbox]").forEach(cb => cb.addEventListener("change", e => { candidates[+e.target.dataset.i].checked = e.target.checked; refreshCount(); }));
 }
-
 $("#discoverBtn").addEventListener("click", async () => {
   $("#discoverBtn").disabled = true;
-  $("#cands").innerHTML = `<div class="empty"><span class="spin"></span> Searching funding news…</div>`;
-  try{
-    const {job} = await api("/api/discover", {method:"POST", body:"{}"});
-    poll(job, j => {
-      if(j.state === "running" || j.state === "queued"){ $("#cands").innerHTML = `<div class="empty"><span class="spin"></span> ${esc(j.log.at(-1) || "Starting…")}</div>`; return; }
-      $("#discoverBtn").disabled = false;
-      if(j.state === "failed"){ $("#cands").innerHTML = `<div class="empty err">Search failed: ${esc(j.error)}</div>`; return; }
-      candidates = (j.result.candidates || []).map(c => ({...c, checked: c.status === "new"}));
-      renderCands(); refreshCount();
-    });
-  }catch(err){ $("#discoverBtn").disabled = false; $("#cands").innerHTML = `<div class="empty err">${esc(err.message)}</div>`; }
+  $("#cands").innerHTML = `<div class="empty"><span class="spin"></span> Searching funding news and reading headlines…</div>`;
+  try{ const r = await post("/api/discover"); candidates = (r.candidates || []).map(c => ({...c, checked: c.status === "new"})); renderCands(); refreshCount(); }
+  catch(err){ $("#cands").innerHTML = `<div class="empty err">${esc(err.message)}</div>`; }
+  finally{ $("#discoverBtn").disabled = false; }
 });
-
 $("#researchBtn").addEventListener("click", async () => {
-  const t = targets(); if(!t.length) return;
-  try{
-    const {job} = await api("/api/research", {method:"POST", body: JSON.stringify({targets:t})});
-    $("#job").hidden = false; $("#discoverBtn").disabled = true;
-    poll(job, j => {
-      const done = j.items.filter(i => i.state === "done" || i.state === "skipped").length;
-      $("#jobBar").style.width = j.items.length ? `${Math.round(100*done/j.items.length)}%` : "0";
-      $("#jobList").innerHTML = j.items.map(i => `<div>${i.state==="researching"?'<span class="spin"></span>':""}
-        <strong>${esc(i.name)}</strong> <span class="mono muted">${esc(i.domain)}</span>
-        ${i.status?`<span class="pill p-${esc(i.status)}">${esc(STATUS[i.status]||i.status)}</span>`:`<span class="muted">${esc(i.state)}</span>`}</div>`).join("");
-      $("#jobLog").textContent = j.log.at(-1) || "";
-      if(j.state === "done" || j.state === "failed"){
-        $("#discoverBtn").disabled = false;
-        if(j.state === "failed") $("#jobLog").textContent = `Stopped: ${j.error}`;
-        loadAccounts(); toast("Research finished");
-      }
-    });
-  }catch(err){ toast(err.message); }
-});
-
-function poll(id, onUpdate){
-  clearInterval(pollTimer);
-  const tick = async () => {
-    try{
-      const j = await api(`/api/jobs/${id}`); onUpdate(j);
-      if(j.state === "done" || j.state === "failed"){ clearInterval(pollTimer); pollTimer = null; refreshCount(); }
-    }catch(err){ clearInterval(pollTimer); pollTimer = null; toast(err.message); refreshCount(); }
+  const list = targets(); if(!list.length) return;
+  busy = true; refreshCount(); $("#job").hidden = false;
+  const items = list.map(t => ({...t, state:"waiting"}));
+  const draw = () => {
+    const done = items.filter(i => i.state === "done").length;
+    $("#jobBar").style.width = `${Math.round(100*done/items.length)}%`;
+    $("#jobList").innerHTML = items.map(i => `<div>${i.state==="researching"?'<span class="spin"></span>':""}<strong>${esc(i.name||i.domain)}</strong> <span class="mono muted">${esc(i.domain)}</span>
+      ${i.status?`<span class="pill p-${esc(i.status)}">${esc(STATUS[i.status]||i.status)}</span> <span class="muted small">${esc((i.reason||"").slice(0,120))}</span>`:`<span class="muted">${esc(i.state)}</span>`}</div>`).join("");
   };
-  pollTimer = setInterval(tick, 2500); tick(); refreshCount();
-}
+  for(const it of items){
+    it.state = "researching"; draw();
+    try{ const r = await post("/api/research", {domain: it.domain, name: it.name}); Object.assign(it, r); }
+    catch(err){ it.status = "retry"; it.reason = err.message; }
+    it.state = "done"; draw(); loadAccounts();
+  }
+  busy = false; refreshCount(); toast("Research finished");
+});
 
 // ---------- step 3
-async function loadAccounts(){
-  try{ accounts = (await api("/api/accounts")).accounts; renderAccounts(); }catch(err){ toast(err.message); }
-}
+async function loadAccounts(){ try{ accounts = (await api("/api/accounts")).accounts; renderAccounts(); }catch(err){ toast(err.message); } }
 document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => {
   filter = b.dataset.f; document.querySelectorAll("#tabs button").forEach(x => x.setAttribute("aria-pressed", String(x===b))); renderAccounts();
 }));
 function gateRows(g){
-  const order = ["G1","G5","G3","G2","G4"], mark = {pass:"✓", fail:"✕", unknown:"?"};
-  return order.filter(k => g[k]).map(k => `<div><span class="mono">${k}</span><span class="s-${esc(g[k].status)}">${mark[g[k].status]||"?"}</span><span class="r">${esc(g[k].reason)}</span></div>`).join("");
+  const mark = {pass:"✓", fail:"✕", unknown:"?"};
+  return ["G1","G5","G3","G2","G4"].filter(k => g[k]).map(k => `<div><span class="mono">${k}</span><span class="s-${esc(g[k].status)}">${mark[g[k].status]||"?"}</span><span class="r">${esc(g[k].reason)}</span></div>`).join("");
 }
 function peopleTable(a){
-  if(!a.people.length) return `<p class="muted">No contact found. ${esc(a.status==="go"||a.reason?.startsWith("no contact")?a.reason:"Contacts are looked up only for accounts that pass every gate.")}</p>`;
+  if(!a.people.length) return `<p class="muted">No contact found. ${esc(a.reason?.startsWith("no contact")?a.reason:"Contacts are looked up only for accounts that pass every gate.")}</p>`;
   return `<div class="tblwrap"><table><thead><tr><th>Person</th><th>Title</th><th>Email</th><th>Status</th></tr></thead><tbody>${a.people.map(p => `
     <tr><td><strong>${esc(p.name||"—")}</strong>${p.role==="primary"?' <span class="chip">primary</span>':""}${p.warning?`<div class="warn">⚠ ${esc(p.warning)}</div>`:""}</td>
     <td>${esc(p.title||"")}</td>
-    <td class="em">${p.email?`${esc(p.email)} <button class="small" data-copy="${esc(p.email)}">Copy</button>`:'<span class="muted">not found</span>'}</td>
-    <td class="muted">${esc(p.verification||"")}${p.role!=="primary"&&p.why?`<div style="font-size:.78rem">${esc(p.why)}</div>`:""}</td></tr>`).join("")}</tbody></table></div>
+    <td class="em">${p.email?`${esc(p.email)} <button class="sm" data-copy="${esc(p.email)}">Copy</button>`:'<span class="muted">not found</span>'}</td>
+    <td class="muted">${esc(p.verification||"")}${p.role!=="primary"&&p.why?`<div class="small">${esc(p.why)}</div>`:""}</td></tr>`).join("")}</tbody></table></div>
     ${a.people[0]?.role==="primary"?`<p class="hook">Why this person: ${esc(a.people[0].why)}</p>`:""}`;
+}
+function draftBlock(a){
+  if(!a.draft) return "";
+  const th = threadsByDomain[a.domain];
+  const agentBtn = th ? `<span class="pill p-${esc(th.status)}">Agent: ${esc(STATUS[th.status]||th.status)}</span>`
+                      : `<button class="sm primary" data-agent="${esc(a.domain)}">Send and start reply agent</button>`;
+  return `<section class="full"><span class="label">Draft email${a.draft.lessons_used?.length?` · written with lessons ${a.draft.lessons_used.map(i=>"#"+i).join(", ")}`:""}</span>
+    <p><strong>Subject:</strong> ${esc(a.draft.subject)}</p>
+    <div class="draft">${esc(a.draft.body)}</div>
+    <p class="hook">Opening line based on: “${esc(a.draft.hook_quote||"")}” ${a.draft.hook_url?`<a href="${esc(a.draft.hook_url)}" target="_blank" rel="noopener">source</a>`:""}</p>
+    <div class="row"><button class="sm" data-copy-draft="${esc(a.domain)}">Copy email</button>${agentBtn}</div>
+  </section>
+  <section class="full"><span class="label">Your feedback on this draft</span>
+    <form class="fb" data-fb="${esc(a.domain)}">
+      <select name="rating" aria-label="Rating"><option value="">Rate it…</option>${[5,4,3,2,1].map(n=>`<option value="${n}">${n} ${["","poor","weak","usable","good","send as is"][n]}</option>`).join("")}</select>
+      <textarea name="edited" placeholder="Optional: paste the version you would actually send"></textarea>
+      <span></span><div class="row"><input type="text" name="notes" placeholder="Optional note, e.g. too long, wrong hook"><button class="sm" type="submit">Save feedback</button></div>
+    </form></section>`;
 }
 function renderAccounts(){
   const list = accounts.filter(a => filter === "all" || a.status === filter || (filter==="needs_review" && a.status==="retry"));
-  const counts = s => accounts.filter(a => a.status === s || (s==="needs_review" && a.status==="retry")).length;
-  document.querySelectorAll("#tabs button").forEach(b => { const f=b.dataset.f, base=b.textContent.replace(/ \(\d+\)$/,""); b.textContent = `${base} (${f==="all"?accounts.length:counts(f)})`; });
+  const count = s => accounts.filter(a => a.status === s || (s==="needs_review" && a.status==="retry")).length;
+  document.querySelectorAll("#tabs button").forEach(b => { const f=b.dataset.f, base=b.textContent.replace(/ \(\d+\)$/,""); b.textContent = `${base} (${f==="all"?accounts.length:count(f)})`; });
   const box = $("#accts");
   if(!list.length){ box.innerHTML = `<div class="empty">No accounts here yet. Research some in step 2.</div>`; return; }
   box.innerHTML = list.map(a => `
@@ -317,29 +343,80 @@ function renderAccounts(){
         <span class="reason">${esc(a.status==="go"?(a.people[0]?`${a.people[0].name}, ${a.people[0].title}`:"Qualified"):a.reason)}</span>
       </summary>
       <div class="detail">
-        <section><span class="label">Why — gate by gate</span><div class="gl">${gateRows(a.gates)}</div></section>
+        <section><span class="label">Why, gate by gate</span><div class="gl">${gateRows(a.gates)}</div></section>
         <section><span class="label">People to target</span>${peopleTable(a)}</section>
-        ${a.draft?`<section class="full"><span class="label">Draft email</span>
-          <p><strong>Subject:</strong> ${esc(a.draft.subject)}</p>
-          <div class="draft">${esc(a.draft.body)}</div>
-          <p class="hook">Opening line based on: “${esc(a.draft.hook_quote||"")}” ${a.draft.hook_url?`<a href="${esc(a.draft.hook_url)}" target="_blank" rel="noopener">source</a>`:""}</p>
-          <div class="actions"><button class="small" data-copy-draft="${esc(a.domain)}">Copy email</button>
-            <button class="small" data-send="${esc(a.domain)}">${a.sent==="sent"?"Sent to my inbox ✓ · send again":"Send to my inbox"}</button></div></section>`:""}
+        ${draftBlock(a)}
       </div>
     </details>`).join("");
   box.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", e => { e.preventDefault(); copy(b.dataset.copy); }));
-  box.querySelectorAll("[data-copy-draft]").forEach(b => b.addEventListener("click", () => {
-    const a = accounts.find(x => x.domain === b.dataset.copyDraft); copy(`Subject: ${a.draft.subject}\n\n${a.draft.body}`);
-  }));
-  box.querySelectorAll("[data-send]").forEach(b => b.addEventListener("click", async () => {
+  box.querySelectorAll("[data-copy-draft]").forEach(b => b.addEventListener("click", () => { const a = accounts.find(x => x.domain === b.dataset.copyDraft); copy(`Subject: ${a.draft.subject}\n\n${a.draft.body}`); }));
+  box.querySelectorAll("[data-agent]").forEach(b => b.addEventListener("click", async () => {
     b.disabled = true;
-    try{ const r = await api("/api/send", {method:"POST", body: JSON.stringify({domain:b.dataset.send})});
-      if(r.ok){ toast("Sent to your inbox"); loadAccounts(); } else { toast(r.error); b.disabled = false; } }
+    try{ const r = await post("/api/agent/start", {domain: b.dataset.agent}); if(r.ok){ toast("Draft sent to your inbox. Reply to it as the prospect."); await loadThreads(); renderAccounts(); } else { toast(r.error); b.disabled = false; } }
     catch(err){ toast(err.message); b.disabled = false; }
+  }));
+  box.querySelectorAll("[data-fb]").forEach(f => f.addEventListener("submit", async e => {
+    e.preventDefault(); const fd = new FormData(f);
+    try{ await post("/api/feedback", {domain: f.dataset.fb, rating: fd.get("rating"), edited_body: fd.get("edited"), notes: fd.get("notes")}); toast("Feedback saved"); f.reset(); loadLessons(); }
+    catch(err){ toast(err.message); }
   }));
 }
 
-$("#sellerForm").requestSubmit();
+// ---------- step 4
+async function loadThreads(){
+  try{
+    const {threads} = await api("/api/agent/threads");
+    threadsByDomain = Object.fromEntries(threads.map(t => [t.domain, t]));
+    const box = $("#threads");
+    if(!threads.length){ box.innerHTML = `<div class="empty">No threads yet. Open a Go account and choose “Send and start reply agent”.</div>`; return; }
+    const F = ["reply_status","calendar_checked","times_proposed","reply_round","meeting_status","crm_logged"];
+    box.innerHTML = threads.map(t => `
+      <details class="acct" ${t.status==="active"?"open":""}>
+        <summary><span class="nm"><strong>${esc(t.state.company||t.domain)}</strong><span>${esc(t.domain)} · updated ${esc(t.updated_at.slice(0,16).replace("T"," "))}</span></span>
+          <span class="pill p-${esc(t.status)}">${esc(STATUS[t.status]||t.status)}</span><span class="ppl">round ${esc(t.state.reply_round)}</span>
+          <span class="reason">${esc(t.state.escalation_reason || (t.state.meeting_status==="confirmed"?"Meeting booked":t.state.reply_status))}</span></summary>
+        <div class="detail"><section class="full"><span class="label">State object</span>
+          <div class="state">${F.map(k => `<div><b>${k}</b><span>${esc(Array.isArray(t.state[k]) ? (t.state[k].length? t.state[k].map(x=>x.slice(5,16).replace("T"," ")).join(", "):"[]") : String(t.state[k]))}</span></div>`).join("")}</div></section>
+          <section class="full"><span class="label">What the agent did (newest first)</span>
+          <div class="events">${t.events.map(e => `<div>${esc(e.created_at.slice(5,16).replace("T"," "))} · ${esc(e.node)}${e.tool?` → ${esc(e.tool)}`:""} · <b>${esc(e.outcome)}</b>${e.detail?` · ${esc(e.detail.slice(0,160))}`:""}</div>`).join("") || "<div>No events yet.</div>"}</div></section>
+        </div></details>`).join("");
+  }catch(err){ toast(err.message); }
+}
+$("#tickBtn").addEventListener("click", async () => {
+  $("#tickBtn").disabled = true;
+  try{ const r = await post("/api/agent/tick"); toast(r.ticked.length ? `Checked ${r.ticked.length} thread(s)` : "No active threads"); await loadThreads(); renderAccounts(); loadLessons(); }
+  catch(err){ toast(err.message); } finally{ $("#tickBtn").disabled = false; }
+});
+
+// ---------- step 5
+async function loadLessons(){
+  try{
+    const {lessons, feedback} = await api("/api/lessons");
+    $("#fbCount").textContent = `${feedback.length} feedback item${feedback.length===1?"":"s"} so far (ratings, edits, reply outcomes)`;
+    const box = $("#lessons");
+    if(!lessons.length){ box.innerHTML = `<div class="empty">No lessons yet. Rate or edit drafts, run the reply agent, then choose “Learn from feedback”.</div>`; return; }
+    box.innerHTML = lessons.map(l => `<div class="lesson">
+      <div class="row"><span class="mono small">#${l.id}</span><span class="pill p-${l.status==="approved"?"done":l.status==="rejected"?"aborted":"active"}">${esc(l.status)}</span><strong>${esc(l.text)}</strong></div>
+      <span class="muted small">${esc(l.rationale||"")} · evidence: feedback ${l.evidence.map(i=>"#"+i).join(", ")}</span>
+      ${l.status==="pending"?`<div class="row"><button class="sm primary" data-lesson="${l.id}" data-s="approved">Approve</button><button class="sm" data-lesson="${l.id}" data-s="rejected">Reject</button></div>`:""}
+    </div>`).join("");
+    box.querySelectorAll("[data-lesson]").forEach(b => b.addEventListener("click", async () => {
+      try{ await post(`/api/lessons/${b.dataset.lesson}`, {status: b.dataset.s}); loadLessons(); toast(b.dataset.s==="approved"?"Approved: new drafts will use it":"Rejected"); }catch(err){ toast(err.message); }
+    }));
+  }catch(err){ toast(err.message); }
+}
+$("#learnBtn").addEventListener("click", async () => {
+  $("#learnBtn").disabled = true;
+  try{ const r = await post("/api/lessons/propose"); toast(r.ok ? `${r.added.length} new lesson(s) to review` : r.error); loadLessons(); }
+  catch(err){ toast(err.message); } finally{ $("#learnBtn").disabled = false; }
+});
+
+// ---------- boot
+async function start(){ $("#app").hidden = false; $("#sellerForm").requestSubmit(); }
+(async () => {
+  try{ const me = await api("/api/me"); if(me.authed) start(); else showLogin(); }
+  catch{ showLogin(); }
+})();
 </script>
 </body>
 </html>

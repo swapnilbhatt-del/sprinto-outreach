@@ -7,7 +7,7 @@ from http.server import ThreadingHTTPServer
 
 from src.discover import discover, match_domain
 from src.research.fetch import FetchResult
-from src.webapp import Handler, account_summary, match_seller
+from src.webapp import account_summary, match_seller
 
 from .conftest import FakeFetcher, FakeLLM
 
@@ -89,18 +89,59 @@ def test_people_list_puts_primary_first_and_keeps_news_names():
     assert people[0]["role"] == "primary" and people[2]["email"] is None
 
 
-def test_server_answers_only_on_localhost(icp):
-    Handler.icp = icp
-    srv = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+def _serve(handler_cls, icp):
+    import src.server as server
+    server._ICP = icp
+    srv = ThreadingHTTPServer(("127.0.0.1", 0), handler_cls)
     threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv, srv.server_address[1]
+
+
+def _req(port, method, path, body=None, headers=None):
+    c = HTTPConnection("127.0.0.1", port, timeout=5)
+    h = {"Host": f"127.0.0.1:{port}", "Content-Type": "application/json", **(headers or {})}
+    c.request(method, path, body=json.dumps(body) if body is not None else None, headers=h)
+    r = c.getresponse()
+    return r.status, json.loads(r.read() or b"{}"), r.getheader("Set-Cookie")
+
+
+def test_local_server_answers_only_on_localhost(icp, monkeypatch):
+    from src.webapp import LocalHandler
+    monkeypatch.delenv("APP_PASSWORD", raising=False)
+    srv, port = _serve(LocalHandler, icp)
     try:
-        port = srv.server_address[1]
-        c = HTTPConnection("127.0.0.1", port, timeout=5)
-        c.request("GET", "/api/accounts", headers={"Host": "evil.example"})
-        assert c.getresponse().status == 403
-        c = HTTPConnection("127.0.0.1", port, timeout=5)
-        c.request("GET", "/api/seller?name=Vanta", headers={"Host": f"127.0.0.1:{port}"})
-        r = c.getresponse()
-        assert r.status == 404 and "isn't set up yet" in json.loads(r.read())["error"]
+        assert _req(port, "GET", "/api/me", headers={"Host": "evil.example"})[0] == 403
+        status, body, _ = _req(port, "GET", "/api/seller?name=Vanta")
+        assert status == 404 and "isn't set up yet" in body["error"]
     finally:
         srv.shutdown()
+
+
+def test_deployed_api_needs_login_and_cron_needs_its_secret(icp, monkeypatch, tmp_path):
+    from src.server import Handler
+    monkeypatch.setenv("APP_PASSWORD", "pw-123")
+    monkeypatch.setenv("CRON_SECRET", "cron-xyz")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    import src.server as server
+    monkeypatch.setattr(server, "data", lambda: __import__("src.appdata", fromlist=["AppData"]).AppData(tmp_path / "s.sqlite"))
+    srv, port = _serve(Handler, icp)
+    try:
+        assert _req(port, "GET", "/api/accounts")[0] == 401
+        assert _req(port, "POST", "/api/login", {"password": "nope"})[0] == 401
+        status, _, cookie = _req(port, "POST", "/api/login", {"password": "pw-123"})
+        assert status == 200 and "HttpOnly" in cookie
+        session = cookie.split(";")[0]
+        assert _req(port, "GET", "/api/accounts", headers={"Cookie": session})[0] == 200
+        assert _req(port, "POST", "/api/agent/tick", {}, headers={"Authorization": "Bearer wrong"})[0] == 401
+        status, body, _ = _req(port, "POST", "/api/agent/tick", {}, headers={"Authorization": "Bearer cron-xyz"})
+        assert status == 200 and body == {"ticked": []}
+    finally:
+        srv.shutdown()
+
+
+def test_vercel_rewrite_path_is_restored():
+    from src.server import original_url
+    assert original_url("/api/index?__path=/api/seller&name=Sprinto").path == "/api/seller"
+    assert original_url("/api/index?__path=/api/seller&name=Sprinto").query == "name=Sprinto"
+    assert original_url("/api/index?__path=/").path == "/"
+    assert original_url("/api/me").path == "/api/me"                     # local server: unchanged

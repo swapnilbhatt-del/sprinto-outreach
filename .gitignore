@@ -12,3 +12,6 @@ credentials*.json
 outputs/runs/
 # Built report holds contacts' names and drafts; rebuild with outputs/report/build.py
 outputs/report/pipeline-report.html
+db/google_token.json
+.vercel
+.env*

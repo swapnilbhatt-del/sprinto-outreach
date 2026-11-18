@@ -1,0 +1,13 @@
+.venv
+.env
+.env.*
+!.env.example
+client_secret*.json
+db/*.sqlite
+db/*token*.json
+outputs/runs
+outputs/report/pipeline-report.html
+tests
+.pytest_cache
+**/__pycache__
+.claude

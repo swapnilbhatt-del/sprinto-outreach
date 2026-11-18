@@ -21,6 +21,7 @@ from .poc_hunter import (account_credits, choose_contact, company_headcount, dom
 from .qualify import decide, weighted_score
 from .research.fetch import Fetcher
 from .research.news import Throttle
+from .appdata import AppData
 from .research.store import Store
 from .send_gmail import RecipientNotAllowed, send
 from .shortlist import normalise, shortlist
@@ -36,7 +37,8 @@ def llm_outages(actions: list[dict]) -> list[str]:
 
 def process_domain(domain: str, icp: dict, *, fetcher, llm, store: Store, dry_run: bool, review: bool,
                    today: date, hunter_http=None, gmail_service=None, print_fn=print, news_throttle=None,
-                   company_name: str | None = None, hunter_quota: float | None = None) -> dict:
+                   company_name: str | None = None, hunter_quota: float | None = None,
+                   lessons: list[dict] | None = None) -> dict:
     loop_cfg = icp["agent_loop"]
     quota = hunter_quota if hunter_quota is not None else icp["contact"]["hunter_monthly_quota"]
     budget = CallBudget(loop_cfg["max_llm_calls_per_company"])
@@ -121,7 +123,7 @@ def process_domain(domain: str, icp: dict, *, fetcher, llm, store: Store, dry_ru
     if status == "go" and contact:
         # Step 7: personalised draft
         dstatus, d, dreason = draft(llm, budget, icp, f"{res.company['name']} ({domain})", contact, res.facts,
-                                    trail["contact"]["why"])
+                                    trail["contact"]["why"], lessons=lessons)
         store.draft(domain, dstatus, d, dreason)
         trail["email"] = {"status": dstatus, "reason": dreason, "draft": d}
         if dstatus != "drafted":
@@ -211,7 +213,7 @@ def main(argv=None) -> int:
         icp["run"]["max_companies_per_run"] = args.limit
     today = date.today()
     run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
-    store = Store(run_id=run_id)
+    store = AppData(run_id=run_id)
     store.start_run(args.dry_run)
 
     names = {}                     # optional "domain, Company Name" per line
@@ -249,6 +251,7 @@ def main(argv=None) -> int:
             trail = {"domain": d, "run_id": run_id, "final_status": "needs_review", "final_reason": reason,
                      "llm_calls": None, "research": {"exit_reason": "error"}}
         write_trail(trail)
+        store.save_trail(trail)
         print(f"  {trail['final_status']}: {trail['final_reason'][:160]}")
         trails.append(trail)
 
