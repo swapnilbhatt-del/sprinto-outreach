@@ -70,6 +70,14 @@ td.num{font:.82rem var(--mono);color:var(--muted);white-space:nowrap;font-varian
 .g b{font-weight:600}
 .g-pass b{color:var(--go)} .g-fail{border-color:var(--no);color:var(--no)} .g-fail b{color:var(--no)} .g-unknown b{color:var(--rev)}
 .foot{font-size:.85rem;color:var(--muted)}
+.live{display:inline-block;font-weight:700;text-decoration:none;background:var(--accent);color:var(--sheet);padding:10px 16px;border-radius:8px}
+.live:hover{filter:brightness(1.08)}
+.trace{overflow-x:auto;background:var(--sheet);border:1px solid var(--rule);border-radius:8px}
+.trace table{min-width:640px}
+.state{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.state div{background:var(--sheet);border:1px solid var(--rule);border-radius:7px;padding:8px 10px;min-width:0}
+.state b{display:block;font:500 .72rem var(--mono);color:var(--muted)}
+.state span{font:.9rem var(--mono);overflow-wrap:anywhere}
 .drafts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
 .draft{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
 .draft header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
@@ -94,9 +102,10 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
 
 <div class="wrap">
   <header class="top">
-    <span class="eyebrow">Run report · 17 Nov 2026</span>
+    <span class="eyebrow">Run report · 18 Nov 2026</span>
     <h1>Sprinto Outreach Pipeline</h1>
-    <p class="lede">An agent that finds and researches B2B software companies, decides whether each fits Sprinto's ideal customer profile, finds the right person and a verified email, and drafts a cited cold email that goes only to the owner's own inbox.</p>
+    <p class="lede">An agent that finds and researches B2B software companies, decides whether each fits Sprinto's ideal customer profile, finds the right person and a verified email, drafts a cited cold email, then handles the replies: proposing times, booking the meeting and learning from every outcome. Everything is sent only to the owner's own inbox.</p>
+    <p><a class="live" href="https://sprinto-outreach-mauve.vercel.app" target="_blank" rel="noopener">Open the live app → sprinto-outreach-mauve.vercel.app</a></p>
     <div class="tally">
       <div><b>{{N}}</b><span>companies researched</span></div>
       <div class="t-go"><b>{{GO}}</b><span>go, with contact and draft</span></div>
@@ -107,13 +116,15 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
 
   <section>
     <span class="eyebrow">The app</span>
-    <h2>Prospect Desk: type who you sell for, get accounts and people</h2>
+    <h2>Prospect Desk: live, open to anyone with the link</h2>
     <div class="app">
       <div><span class="k">1 · Seller</span><p>Type “Sprinto”. The page loads its ideal-customer profile and the gates. Other sellers show “not set up yet”.</p></div>
       <div><span class="k">2 · Accounts</span><p>Find recent Series A–C raises in free funding news (each with its quoted headline and source), or paste domains. Research runs the full check.</p></div>
-      <div><span class="k">3 · People</span><p>For each qualified account: who to contact, title, verified email, why that person, and the drafted email with a copy button and “Send to my inbox”.</p></div>
+      <div><span class="k">3 · People</span><p>For each qualified account: who to contact, title, verified email, why that person, and the drafted email with a copy button.</p></div>
+      <div><span class="k">4 · Reply agent</span><p>“Send and start reply agent” mails the draft to the owner, who replies as the prospect. The agent reads the reply, checks the calendar, proposes times, books and logs, or escalates.</p></div>
+      <div><span class="k">5 · Feedback loop</span><p>Rate or edit any draft. “Learn from feedback” turns ratings, edits and reply outcomes into lessons; approved lessons shape the next drafts.</p></div>
     </div>
-    <p class="foot">It runs on the owner's Mac at 127.0.0.1:8765, so API keys and contact emails never leave that computer. This report is the shareable summary. Code: <a href="https://github.com/swapnilbhatt-del/sprinto-outreach" target="_blank" rel="noopener">github.com/swapnilbhatt-del/sprinto-outreach</a></p>
+    <p class="foot">Hosted on Vercel with a Supabase (Postgres) database. No sign-in: anyone with the link can view and run it, and every email it sends still goes only to the owner's inbox. A scheduler checks for replies every 15 minutes. Code: <a href="https://github.com/swapnilbhatt-del/sprinto-outreach" target="_blank" rel="noopener">github.com/swapnilbhatt-del/sprinto-outreach</a></p>
   </section>
 
   <section>
@@ -156,6 +167,39 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
   </section>
 
   <section>
+    <span class="eyebrow">After the email is sent · L6</span>
+    <h2>The reply agent, tested live on 18 Nov</h2>
+    <p class="intro">A LangGraph state machine with five tools, each described by what it does, when to use it, when not to, and what it returns. Its state object is saved in the database after every check, so it resumes where it stopped. In the test the owner played the prospect by replying from the owner's own inbox; each check ran on the live site, triggered by the scheduler.</p>
+    <div class="trace"><table>
+      <thead><tr><th>Prospect's reply (Wealthy)</th><th>What the agent did</th></tr></thead>
+      <tbody>
+        <tr><td>(draft sent)</td><td>Thread opened: reply_status no_reply, meeting_status unscheduled</td></tr>
+        <tr><td>“Relevant for us… what times work next week?”</td><td>Classified <b>interested</b> → check_calendar (real free/busy) → propose_time: 19, 20 and 23 Nov, 10:00 IST</td></tr>
+        <tr><td>“Could we do Monday 23 at 3pm instead?”</td><td>Classified <b>counter-proposal</b> → reply_round 1 → calendar re-checked → offered 23 Nov 3:00 PM</td></tr>
+        <tr><td>“Yes, Monday 23rd at 3pm works.”</td><td>Classified <b>confirmed</b> → book_meeting (event on the owner's calendar) → confirmation sent</td></tr>
+        <tr><td>(end of thread)</td><td>update_crm failed (HubSpot not connected) → retry table: <b>escalate</b> to the Growth Lead</td></tr>
+      </tbody></table></div>
+    <span class="label" style="font-family:var(--mono);font-size:.72rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase">Final state object</span>
+    <div class="state">
+      <div><b>reply_status</b><span>confirmed</span></div><div><b>calendar_checked</b><span>true</span></div>
+      <div><b>times_proposed</b><span>23 Nov 15:00</span></div><div><b>reply_round</b><span>1</span></div>
+      <div><b>meeting_status</b><span>confirmed</span></div><div><b>crm_logged</b><span>false → escalated</span></div>
+    </div>
+    <div class="after">
+      <div><strong>When it hands off</strong>Counter-proposal round 2 without a confirmed time, no reply in 48 hours, a reply it can't classify with confidence, or a tool failure the retry table sends to a human.</div>
+      <div><strong>Retry table</strong>Calendar timeout: retry 3×, then escalate. Booking failure: abort. CRM down: escalate (a human logs it). Send timeout: retry 3×, then skip.</div>
+      <div><strong>Safety</strong>Every email goes only to the owner's address (checked twice in code); calendar events are created with no attendees.</div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Getting better each send · L5</span>
+    <h2>The feedback loop</h2>
+    <p class="intro">Each draft collects three kinds of feedback: the reply outcome (recorded by the agent), the owner's 1–5 rating, and the edited version the owner would send. “Learn from feedback” asks the model for at most three short writing lessons, each citing the feedback that supports it. Lessons without evidence, longer than 30 words, or repeating an existing one are dropped. Only lessons the owner approves are added to the drafting prompt, and every new draft records which lessons it used, so its outcome becomes evidence about them.</p>
+    <p class="foot">On the live data the loop has three positive outcomes for one email and correctly proposes no lesson yet; it waits for ratings and edits rather than generalising from a single draft.</p>
+  </section>
+
+  <section>
     <span class="eyebrow">Brief</span>
     <h2>What was asked and what was built</h2>
     <ul class="checks">
@@ -168,17 +212,21 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
       <li><div>LLM-drafted, cited email<small>Checked for hook, first name, word count, one question, no links</small></div></li>
       <li><div>Gmail send only to OWN_EMAIL<small>Recipient checked twice in code; --dry-run and --review modes</small></div></li>
       <li><div>No hardcoded secrets<small>All keys in .env, which git ignores, as it does the Gmail token</small></div></li>
-      <li><div>Docs, decision trails, tests<small>86 tests; a JSON trail per company with every fact's source</small></div></li>
+      <li><div>Docs, decision trails, tests<small>101 tests; a decision trail per company with every fact's source</small></div></li>
+      <li><div>Reply agent with tools, state object and retry table (L6)<small>LangGraph; tested live through confirm and escalation</small></div></li>
+      <li><div>Feedback loop that improves the email (L5)<small>Evidence-cited lessons, owner approval, lessons recorded per draft</small></div></li>
+      <li><div>Live tool<small>Vercel + Supabase, scheduler every 15 minutes</small></div></li>
     </ul>
   </section>
 
   <section>
     <span class="eyebrow">Verify it yourself</span>
-    <h2>Five checks, ten minutes</h2>
+    <h2>Four checks, ten minutes</h2>
     <ol class="steps">
+      <li><div><strong>Open the live app</strong><span class="foot">No sign-in. Type “Sprinto”, open a Go account, look at the Reply agent and Feedback loop sections.</span><pre>https://sprinto-outreach-mauve.vercel.app</pre></div></li>
       <li><div><strong>Get the code</strong><span class="foot">Then follow the README: add your own keys to <code>.env</code> and install the requirements.</span><pre>git clone https://github.com/swapnilbhatt-del/sprinto-outreach.git</pre></div></li>
-      <li><div><strong>Open Prospect Desk</strong><span class="foot">From the project folder, then open http://127.0.0.1:8765 and type “Sprinto”.</span><pre>.venv/bin/python -m src.webapp</pre></div></li>
-      <li><div><strong>Run the tests</strong><span class="foot">Expect “86 passed”.</span><pre>.venv/bin/python -m pytest -q</pre></div></li>
+
+      <li><div><strong>Run the tests</strong><span class="foot">Expect “101 passed”.</span><pre>.venv/bin/python -m pytest -q</pre></div></li>
       <li><div><strong>Check the inbox</strong><span class="foot">Search Gmail for <code>Sprinto draft</code>: drafts with their internal notes.</span></div></li>
       <li><div><strong>Check the CRM</strong><span class="foot">Qualified prospects are logged as Leads in <a href="https://app-na2.hubspot.com/contacts/247653502/objects/0-2/views/all/list" target="_blank" rel="noopener">HubSpot Companies</a> (owner's login).</span></div></li>
     </ol>
@@ -193,6 +241,8 @@ footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padd
       <li><strong>Bing News misses some older coverage</strong>, such as Rewaa's Dec 2025 Series B.</li>
       <li><strong>Free tiers set the pace:</strong> 50 Hunter credits per cycle and an occasionally overloaded Gemini.</li>
       <li><strong>Only Sprinto is set up as a seller.</strong> Other companies need their own researched profile.</li>
+      <li><strong>HubSpot isn't connected to the agent yet</strong>, so meeting outcomes are handed to the owner to log by hand.</li>
+      <li><strong>The prospect is simulated.</strong> Replies come from the owner's own inbox; nothing is sent to real prospects.</li>
     </ul>
   </section>
 

@@ -58,8 +58,8 @@ The domains file has one domain per line, optionally followed by the company nam
 
 ## Live deployment
 
-**https://sprinto-outreach-mauve.vercel.app** (Vercel + Supabase). Sign in with `APP_PASSWORD`
-(`grep APP_PASSWORD .env` on the owner's Mac). Same app as below, plus:
+**https://sprinto-outreach-mauve.vercel.app** (Vercel + Supabase). Open to anyone with the link
+(`OPEN_ACCESS=1` in Vercel; remove it to require `APP_PASSWORD` again). Same app as below, plus:
 
 - **Reply agent (L6, `src/agent/`):** LangGraph state machine with five tools (`send_email`,
   `check_calendar`, `propose_time`, `book_meeting`, `update_crm`), the six-field state object, a
