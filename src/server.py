@@ -64,8 +64,12 @@ def _people(t: dict) -> list[dict]:
         seen.add(e)
         out.append({"name": r.get("name"), "title": r.get("position"), "email": r.get("email"), "role": "other",
                     "verification": r.get("verification"), "why": r.get("rejected") or "ranked title"})
+    def same_person(a: str, b: str) -> bool:      # "Abhay Gupta" == "Abhay Jeet Gupta"
+        x, y = (a or "").lower().split(), (b or "").lower().split()
+        return bool(x and y) and x[0] == y[0] and x[-1] == y[-1]
+
     for tr in (c.get("leader_fallback") or {}).get("tried", []):
-        if not any(p["name"] == tr["name"] for p in out):
+        if not any(same_person(p["name"], tr["name"]) for p in out):
             out.append({"name": tr["name"], "title": tr["role"], "email": None, "role": "named in news",
                         "verification": tr.get("verification"), "why": f"Email Finder: {tr.get('finder')}"})
     return out
@@ -91,6 +95,98 @@ def account_summary(t: dict) -> dict:
 def sort_accounts(rows: list[dict]) -> list[dict]:
     order = {"go": 0, "needs_review": 1, "retry": 2, "no_go": 3}
     return sorted(rows, key=lambda a: (order.get(a["status"], 9), -(a["score"] or 0), a["name"].lower()))
+
+
+GATE_LABELS = {"G1": "B2B software", "G5": "No SOC 2 / ISO yet", "G3": "100–1,000 staff",
+               "G2": "Series A–C", "G4": "Compliance pressure (+3)"}
+
+
+def overview_data(db: AppData) -> dict:
+    """Numbers for the Overview screen: funnel, rejection reasons, attention items."""
+    trails = db.list_trails()
+    threads = db.list_threads()
+    by_status: dict[str, int] = {}
+    rejected_by: dict[str, int] = {}
+    for t in trails:
+        st = t.get("final_status") or "unknown"
+        by_status[st] = by_status.get(st, 0) + 1
+        g = (t.get("qualification") or {}).get("failing_gate")
+        if st == "no_go" and g:
+            rejected_by[g] = rejected_by.get(g, 0) + 1
+    replied = [x for x in threads if (x["state"].get("reply_status") or "no_reply") != "no_reply"]
+    booked = [x for x in threads if x["state"].get("meeting_status") == "confirmed"]
+    lessons = db.lessons()
+    with_contact = sum(1 for t in trails if ((t.get("contact") or {}).get("chosen")))
+    return {
+        "funnel": [
+            {"key": "researched", "label": "Researched", "n": len(trails)},
+            {"key": "qualified", "label": "Qualified (go)", "n": by_status.get("go", 0)},
+            {"key": "contact", "label": "Verified contact", "n": with_contact},
+            {"key": "contacted", "label": "Emailed", "n": len(threads)},
+            {"key": "replied", "label": "Replied", "n": len(replied)},
+            {"key": "booked", "label": "Meeting booked", "n": len(booked)},
+        ],
+        "by_status": by_status,
+        "rejected_by": [{"gate": g, "label": GATE_LABELS.get(g, g), "n": n}
+                        for g, n in sorted(rejected_by.items(), key=lambda x: -x[1])],
+        "attention": {
+            "escalated": [{"domain": x["domain"], "company": x["state"].get("company"),
+                           "reason": x["state"].get("escalation_reason")} for x in threads if x["status"] == "escalated"],
+            "active_threads": sum(1 for x in threads if x["status"] == "active"),
+            "pending_lessons": sum(1 for l in lessons if l["status"] == "pending"),
+            "needs_review": by_status.get("needs_review", 0) + by_status.get("retry", 0),
+        },
+        "lessons": {"approved": sum(1 for l in lessons if l["status"] == "approved"),
+                    "pending": sum(1 for l in lessons if l["status"] == "pending")},
+        "feedback_items": len(db.feedback_rows(500)),
+    }
+
+
+def account_detail(db: AppData, domain: str) -> dict | None:
+    t = db.get_trail(domain)
+    if not t:
+        return None
+    facts = {f.get("id"): f for f in t.get("facts") or []}
+    base = account_summary(t)
+    gates = []
+    for g, v in (t.get("gates") or {}).items():
+        ev = [facts[i] for i in v.get("evidence_fact_ids") or [] if i in facts]
+        gates.append({"id": g, "label": GATE_LABELS.get(g, g), "status": v.get("status"), "reason": v.get("reason"),
+                      "evidence": [{"quote": f.get("quote"), "url": f.get("source_url"), "date": f.get("date"),
+                                    "source_type": f.get("source_type")} for f in ev[:3]]})
+    order = icp()["gate_order"]
+    gates.sort(key=lambda x: order.index(x["id"]) if x["id"] in order else 99)
+    r = t.get("research") or {}
+    passes: dict[int, list] = {}
+    for a in r.get("actions") or []:
+        passes.setdefault(a.get("pass", 0), []).append({"action": a.get("action"), "outcome": a.get("outcome"),
+                                                       "note": a.get("note")})
+    planner = {p.get("pass"): {"decided_by": p.get("decided_by"), "reasoning": p.get("reasoning")}
+               for p in t.get("planner_decisions") or []}
+    q = t.get("qualification") or {}
+    factors = [{"id": k, "name": v.get("name"), "points": v.get("points")}
+               for k, v in ((q.get("weighted_score") or {}).get("factors") or {}).items()]
+    d = (t.get("email") or {}).get("draft") or {}
+    th = db.get_thread(domain)
+    return {**base,
+            "gates": gates,
+            "score_factors": factors,
+            "research": {"exit_reason": r.get("exit_reason"), "usage": r.get("usage"),
+                         "passes": [{"pass": n, "actions": acts, **planner.get(n, {})} for n, acts in sorted(passes.items())],
+                         "gate_history": r.get("gate_history"), "facts": len(facts),
+                         "dropped": len(t.get("dropped_facts") or [])},
+            "contact_why": (t.get("contact") or {}).get("why"),
+            "email_detail": {"pain_points": d.get("pain_points") or [], "reasoning": d.get("reasoning"),
+                             "cta": d.get("cta")} if d else None,
+            "thread": ({"status": th["status"], "state": th["state"], "events": db.events(domain, 60)} if th else None)}
+
+
+def agent_meta() -> dict:
+    from .agent.graph import MAX_ROUNDS
+    from .agent.tools import RETRY_TABLE, TOOL_DESCRIPTIONS
+    return {"tools": [{"name": n, "description": d, "retry": RETRY_TABLE[n]} for n, d in TOOL_DESCRIPTIONS.items()],
+            "max_rounds": MAX_ROUNDS, "no_reply_hours": float(os.environ.get("AGENT_NO_REPLY_HOURS", 48)),
+            "caps": icp()["agent_loop"]}
 
 
 # ------------------------------------------------------------------ auth
@@ -257,6 +353,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(401, {"error": "Sign in first."})
             if u.path == "/api/seller":
                 return self._seller(parse_qs(u.query).get("name", [""])[0])
+            if u.path == "/api/overview":
+                return self._json(200, overview_data(data()))
+            if u.path == "/api/account":
+                det = account_detail(data(), normalise(parse_qs(u.query).get("domain", [""])[0]) or "")
+                return self._json(200, det) if det else self._json(404, {"error": "Unknown account."})
+            if u.path == "/api/agent/meta":
+                return self._json(200, agent_meta())
             if u.path == "/api/accounts":
                 return self._json(200, {"accounts": sort_accounts([account_summary(t) for t in data().list_trails()])})
             if u.path == "/api/agent/threads":
