@@ -1,0 +1,11 @@
+# Third test batch (2026-11-10). Picked by a research pass for: Series A-C since Nov 2023,
+# 100-1000 staff, no public SOC 2 Type II / ISO 27001 found. The pipeline decides qualification.
+intangles.ai, Intangles
+fleetx.ai, Fleetx
+rewaa.com, Rewaa
+infinite-uptime.com, Infinite Uptime
+wealthy.in, Wealthy
+logcomex.com, Logcomex
+petpooja.com, Petpooja
+mozark.ai, Mozark
+vahan.co, Vahan

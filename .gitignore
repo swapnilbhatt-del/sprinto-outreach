@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+db/*.sqlite
+db/gmail_token.json
+client_secret*.json
+credentials*.json
+# Decision trails hold real contacts' names and emails from Hunter; keep them local.
+outputs/runs/
+# Built report holds contacts' names and drafts; rebuild with outputs/report/build.py
+outputs/report/pipeline-report.html

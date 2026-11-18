@@ -1,0 +1,199 @@
+<title>Sprinto Outreach Pipeline</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; the results ledger breaks wider and scrolls on its own. */
+:root{
+  --paper:#f5f6f8; --sheet:#ffffff; --ink:#18202b; --muted:#5d6878; --rule:#dde1e7;
+  --accent:#2b4fa8; --accent-soft:#e7ecf8;
+  --go:#1d7a4a; --go-soft:#e2f2e9; --rev:#9a6200; --rev-soft:#fbf0d9; --no:#a33a3a; --no-soft:#f8e4e4;
+  --sans:"Hanken Grotesk",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#11151b; --sheet:#181e26; --ink:#e7ebf1; --muted:#9aa5b4; --rule:#2a323d;
+  --accent:#8fa9ef; --accent-soft:#1f2a44;
+  --go:#6fcf9a; --go-soft:#16301f; --rev:#e8b45a; --rev-soft:#33280f; --no:#ef8f8f; --no-soft:#3a1c1c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11151b; --sheet:#181e26; --ink:#e7ebf1; --muted:#9aa5b4; --rule:#2a323d;
+  --accent:#8fa9ef; --accent-soft:#1f2a44;
+  --go:#6fcf9a; --go-soft:#16301f; --rev:#e8b45a; --rev-soft:#33280f; --no:#ef8f8f; --no-soft:#3a1c1c; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,4.5vw,2.9rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.45rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+.eyebrow{font:500 .75rem/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{color:var(--muted);max-width:64ch;font-size:1.06rem}
+section{display:flex;flex-direction:column;gap:18px}
+section>.intro{color:var(--muted);max-width:66ch}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+code{font:.88em var(--mono);background:var(--accent-soft);padding:.1em .35em;border-radius:4px}
+header.top{display:flex;flex-direction:column;gap:16px}
+.tally{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:8px;font-variant-numeric:tabular-nums}
+.tally div{display:flex;align-items:baseline;gap:8px}
+.tally b{font-size:1.9rem;font-weight:800}
+.tally span{color:var(--muted);font-size:.92rem}
+.tally .t-go b{color:var(--go)} .tally .t-rev b{color:var(--rev)} .tally .t-no b{color:var(--no)}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.gate{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:14px 14px 16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.gate .id{font:600 .8rem var(--mono);color:var(--accent)}
+.gate p{font-size:.9rem;color:var(--muted)}
+.gate.score{border-style:dashed}
+.after{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.after div{border-left:3px solid var(--rule);padding:2px 0 2px 12px;font-size:.93rem;color:var(--muted)}
+.after strong{color:var(--ink);display:block}
+.app{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.app div{display:flex;flex-direction:column;gap:4px;min-width:0}
+.app .k{font:600 .78rem var(--mono);color:var(--accent)}
+.app p{color:var(--muted);font-size:.93rem}
+.ledger{overflow-x:auto;background:var(--sheet);border:1px solid var(--rule);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:.92rem}
+th{font:500 .72rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:12px 14px;border-bottom:1px solid var(--rule);background:var(--paper)}
+td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.co strong{display:block}
+.dom{font:.8rem var(--mono);color:var(--muted)}
+td.why{color:var(--muted);max-width:40ch}
+td.num{font:.82rem var(--mono);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font:600 .74rem/1 var(--mono);padding:5px 8px;border-radius:999px;white-space:nowrap}
+.p-go{background:var(--go-soft);color:var(--go)} .p-needs_review{background:var(--rev-soft);color:var(--rev)}
+.p-no_go{background:var(--no-soft);color:var(--no)} .p-retry{background:var(--accent-soft);color:var(--accent)}
+.gates{white-space:nowrap}
+.g{display:inline-flex;gap:3px;align-items:center;font:.72rem var(--mono);padding:3px 5px;margin:0 3px 3px 0;border-radius:4px;border:1px solid var(--rule);color:var(--muted)}
+.g b{font-weight:600}
+.g-pass b{color:var(--go)} .g-fail{border-color:var(--no);color:var(--no)} .g-fail b{color:var(--no)} .g-unknown b{color:var(--rev)}
+.foot{font-size:.85rem;color:var(--muted)}
+.drafts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.draft{background:var(--sheet);border:1px solid var(--rule);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.draft header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.draft .meta{font-size:.85rem;color:var(--muted);flex-basis:100%}
+.draft .subj,.draft .hook{font-size:.9rem}
+.draft .subj span,.draft .hook span{display:block;font:500 .7rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.draft .body{white-space:pre-wrap;border-left:3px solid var(--accent);padding-left:14px;font-size:.95rem}
+.draft .hook a{overflow-wrap:anywhere}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:4px 28px;list-style:none;padding:0;margin:0}
+.checks li{display:grid;grid-template-columns:22px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule);font-size:.95rem}
+.checks li::before{content:"✓";color:var(--go);font-weight:700}
+.checks small{display:block;color:var(--muted);font-size:.85rem}
+.steps{display:flex;flex-direction:column;gap:14px;margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;counter-increment:s;min-width:0}
+.steps li::before{content:counter(s);font:600 .85rem var(--mono);color:var(--accent);padding-top:2px}
+.steps li>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+pre{margin:0;font:.84rem/1.5 var(--mono);background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:10px 12px;overflow-x:auto}
+.limits{display:flex;flex-direction:column;gap:8px;padding-left:1.1em;margin:0;color:var(--muted);max-width:72ch}
+.limits strong{color:var(--ink)}
+footer{color:var(--muted);font-size:.85rem;border-top:1px solid var(--rule);padding-top:16px}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Run report · 17 Nov 2026</span>
+    <h1>Sprinto Outreach Pipeline</h1>
+    <p class="lede">An agent that finds and researches B2B software companies, decides whether each fits Sprinto's ideal customer profile, finds the right person and a verified email, and drafts a cited cold email that goes only to the owner's own inbox.</p>
+    <div class="tally">
+      <div><b>{{N}}</b><span>companies researched</span></div>
+      <div class="t-go"><b>{{GO}}</b><span>go, with contact and draft</span></div>
+      <div class="t-rev"><b>{{REV}}</b><span>needs review</span></div>
+      <div class="t-no"><b>{{NOGO}}</b><span>no-go</span></div>
+    </div>
+  </header>
+
+  <section>
+    <span class="eyebrow">The app</span>
+    <h2>Prospect Desk: type who you sell for, get accounts and people</h2>
+    <div class="app">
+      <div><span class="k">1 · Seller</span><p>Type “Sprinto”. The page loads its ideal-customer profile and the gates. Other sellers show “not set up yet”.</p></div>
+      <div><span class="k">2 · Accounts</span><p>Find recent Series A–C raises in free funding news (each with its quoted headline and source), or paste domains. Research runs the full check.</p></div>
+      <div><span class="k">3 · People</span><p>For each qualified account: who to contact, title, verified email, why that person, and the drafted email with a copy button and “Send to my inbox”.</p></div>
+    </div>
+    <p class="foot">It runs on the owner's Mac at 127.0.0.1:8765, so API keys and contact emails never leave that computer. This report is the shareable summary.</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">How a company is judged</span>
+    <h2>Four gates decide fit, one adds points</h2>
+    <p class="intro">Gates run in this order. Any failed gate makes the company no-go. Any gate that can't be answered from evidence makes it needs-review; nothing passes on a guess. Every pass cites a quote and a source URL.</p>
+    <div class="flow">
+      <div class="gate"><span class="id">G1</span><h3>B2B software</h3><p>Sells software to businesses, quoted from the site or press.</p></div>
+      <div class="gate"><span class="id">G5</span><h3>No SOC 2 / ISO yet</h3><p>No SOC 2 Type II or ISO 27001 claim on the site, its certificate links, trust page or news.</p></div>
+      <div class="gate"><span class="id">G3</span><h3>100–1,000 staff</h3><p>A stated headcount within 24 months, or Hunter's size range.</p></div>
+      <div class="gate"><span class="id">G2</span><h3>Series A–C</h3><p>A named round within 36 months; not acquired, public or Series D+.</p></div>
+      <div class="gate score"><span class="id">G4 · +3 points</span><h3>Compliance pressure</h3><p>A security or GRC job, SOC 2 "in progress", or a new security leader. Scores only since 10 Nov.</p></div>
+    </div>
+    <div class="after">
+      <div><strong>Research order</strong>Free sources first (news, job boards, Wikidata), then Hunter, then the company's own pages. robots.txt is respected; logins and CAPTCHAs are never bypassed.</div>
+      <div><strong>Hard limits per company</strong>3 research passes, 8 page fetches, 16 free API calls, 12 LLM calls. Hunter: 50 credits per billing cycle, checked live before every run, results cached.</div>
+      <div><strong>Contact and email</strong>Highest-ranked title with a verified email (CISO down to CEO). If Hunter has none, founders or CEOs named in news are looked up with Hunter's Email Finder; only valid addresses count.</div>
+    </div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Results</span>
+    <h2>Every company and why</h2>
+    <div class="ledger">
+      <table>
+        <thead><tr><th>Company</th><th>Status</th><th>Gates (in order)</th><th>Why</th><th>Last run</th></tr></thead>
+        <tbody>
+{{ROWS}}
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">✓ pass · ✕ fail · ? unanswered. <sup>*</sup> Run before 10 Nov, when G4 could still reject a company and some later fixes weren't in place.</p>
+  </section>
+
+  <section>
+    <span class="eyebrow">Output</span>
+    <h2>Drafts for the qualified accounts</h2>
+    <p class="intro">Each draft can be sent to the owner's own Gmail with internal notes underneath: why this person, the hook's source, the reasoning for each pain point, and every gate's result. Real outreach is written and sent by the owner.</p>
+    <div class="drafts">{{DRAFTS}}</div>
+  </section>
+
+  <section>
+    <span class="eyebrow">Brief</span>
+    <h2>What was asked and what was built</h2>
+    <ul class="checks">
+      <li><div>ICP in YAML with gates and weighted factors<small>config/icp.yaml, with a decision log for every choice</small></div></li>
+      <li><div>Shortlist excludes HubSpot and competitor customers<small>Reads the real HubSpot export; only Customer-stage companies are skipped</small></div></li>
+      <li><div>Free sources, then vendor, then scraping<small>Enforced per gate in code, not left to the planner</small></div></li>
+      <li><div>Agent loop with hard caps<small>The loop refuses to start without them</small></div></li>
+      <li><div>go / no_go / needs_review<small>Plus retry when the LLM service was down</small></div></li>
+      <li><div>Hunter lookup with cache and quota<small>Search, email finder, email check and size lookup, capped by the live balance</small></div></li>
+      <li><div>LLM-drafted, cited email<small>Checked for hook, first name, word count, one question, no links</small></div></li>
+      <li><div>Gmail send only to OWN_EMAIL<small>Recipient checked twice in code; --dry-run and --review modes</small></div></li>
+      <li><div>No hardcoded secrets<small>All keys in .env, which git ignores, as it does the Gmail token</small></div></li>
+      <li><div>Docs, decision trails, tests<small>86 tests; a JSON trail per company with every fact's source</small></div></li>
+    </ul>
+  </section>
+
+  <section>
+    <span class="eyebrow">Verify it yourself</span>
+    <h2>Four checks, five minutes</h2>
+    <ol class="steps">
+      <li><div><strong>Open Prospect Desk</strong><span class="foot">From the project folder, then open http://127.0.0.1:8765 and type “Sprinto”.</span><pre>.venv/bin/python -m src.webapp</pre></div></li>
+      <li><div><strong>Run the tests</strong><span class="foot">Expect “86 passed”.</span><pre>.venv/bin/python -m pytest -q</pre></div></li>
+      <li><div><strong>Check the inbox</strong><span class="foot">Search Gmail for <code>Sprinto draft</code>: drafts with their internal notes.</span></div></li>
+      <li><div><strong>Check the CRM</strong><span class="foot">Qualified prospects are logged as Leads in <a href="https://app-na2.hubspot.com/contacts/247653502/objects/0-2/views/all/list" target="_blank" rel="noopener">HubSpot Companies</a> (owner's login).</span></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <span class="eyebrow">Limits</span>
+    <h2>What it doesn't do</h2>
+    <ul class="limits">
+      <li><strong>Discovery is news-led.</strong> It finds companies with recent funding headlines; companies that raised quietly need to be pasted in.</li>
+      <li><strong>Pages built only by JavaScript can't be read</strong>, so some trust pages and homepages leave a gate unanswered (Mozark, Omilia).</li>
+      <li><strong>Bing News misses some older coverage</strong>, such as Rewaa's Dec 2025 Series B.</li>
+      <li><strong>Free tiers set the pace:</strong> 50 Hunter credits per cycle and an occasionally overloaded Gemini.</li>
+      <li><strong>Only Sprinto is set up as a seller.</strong> Other companies need their own researched profile.</li>
+    </ul>
+  </section>
+
+  <footer>Built Nov 2026 in Python. Contact email addresses are never shown on this page.</footer>
+</div>

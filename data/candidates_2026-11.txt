@@ -1,0 +1,12 @@
+# Second test batch (2026-11-05). Picked from 2025-26 funding and security-leadership news;
+# the pipeline decides qualification. Optional ", Name" overrides the company name lookup.
+respond.io, respond.io
+omilia.com, Omilia
+conductorone.com, ConductorOne
+autorabit.com, AutoRABIT
+spyne.ai, Spyne
+unifyapps.com, UnifyApps
+bureau.id, Bureau
+kaartech.com, KaarTech
+easebuzz.in, Easebuzz
+gnani.ai, Gnani.ai

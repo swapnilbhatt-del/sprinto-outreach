@@ -1,0 +1,2 @@
+# Companies that reached go on 2026-11-10 (dry run). Send these first, with --review.
+wealthy.in, Wealthy
